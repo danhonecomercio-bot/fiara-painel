@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #1c2c22;
+  --color-foreground: #ffffff;
+  --color-gold: #e6b869;
+  --color-gold-deep: #c9963e;
+  --color-panel: #24382d;
+  --color-panel-2: #2c4336;
+  --color-line: #3e5648;
+  --color-muted: #d5ddd7;
+  --color-danger: #ffb4a8;
+  --font-sans: var(--font-source), "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, serif;
+}
+
+html {
+  color-scheme: dark;
+  background: #1c2c22;
+}
+
+body {
+  background: #1c2c22;
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+summary {
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #e6b869;
+}
+
+::selection {
+  background: #e6b869;
+  color: #1c2c22;
+}
