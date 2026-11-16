@@ -15,12 +15,14 @@ export function webhookConfig(action: OfferActionName): WebhookConfig | null {
 
 export function webhookBody(input: {
   action: OfferActionName;
+  actionId: string;
   offer: Pick<OfferDetail, "slug" | "title" | "libraries">;
   requestedBy: string;
   requestedAt: string;
 }) {
   return {
     action: input.action,
+    action_id: input.actionId,
     slug: input.offer.slug,
     title: input.offer.title,
     funnel_slug: input.offer.slug.toLowerCase(),

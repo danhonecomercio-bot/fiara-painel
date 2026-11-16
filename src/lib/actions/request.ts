@@ -34,6 +34,7 @@ export async function requestOfferAction(input: {
 
   const body = webhookBody({
     action: input.action,
+    actionId: row.id,
     offer: input.offer,
     requestedBy: input.requestedBy,
     requestedAt,

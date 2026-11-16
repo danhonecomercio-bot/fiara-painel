@@ -45,12 +45,14 @@ describe("webhook de ações", () => {
   it("monta o corpo com o slug do funil e sem rastreio", () => {
     const body = webhookBody({
       action: "baixar_top_ads",
+      actionId: "8d2c1c3e-1b4a-4f0e-9c2a-6b7d8e9f0a1b",
       offer: offer(),
       requestedBy: "membro@fiara.com.br",
       requestedAt: "2026-11-16T18:00:00.000Z",
     });
     assert.deepEqual(body, {
       action: "baixar_top_ads",
+      action_id: "8d2c1c3e-1b4a-4f0e-9c2a-6b7d8e9f0a1b",
       slug: "Protocolo-Queima-21",
       title: "Protocolo Queima 21",
       funnel_slug: "protocolo-queima-21",
@@ -87,6 +89,7 @@ describe("webhook de ações", () => {
     });
     assert.equal(sent.status, "sent");
     assert.equal(calls.length, 1);
+    assert.equal(JSON.parse(String(calls[0]?.init.body)).action_id, sent.id);
     assert.equal(calls[0]?.init.headers && (calls[0].init.headers as Record<string, string>).authorization, "Bearer segredo");
 
     const failed = await requestOfferAction({
@@ -122,6 +125,7 @@ describe("webhook de ações", () => {
             { url: "https://bot.exemplo/hook", key: "segredo" },
             webhookBody({
               action: "baixar_top_ads",
+              actionId: "8d2c1c3e-1b4a-4f0e-9c2a-6b7d8e9f0a1b",
               offer: offer(),
               requestedBy: "membro@fiara.com.br",
               requestedAt: "2026-11-16T18:00:00.000Z",

@@ -281,6 +281,7 @@ X-Automation-Key: <WEBHOOK_KEY>
 ```json
 {
   "action": "baixar_top_ads",
+  "action_id": "8d2c1c3e-1b4a-4f0e-9c2a-6b7d8e9f0a1b",
   "slug": "protocolo-queima-21",
   "title": "Protocolo Queima 21",
   "funnel_slug": "protocolo-queima-21",
@@ -292,7 +293,7 @@ X-Automation-Key: <WEBHOOK_KEY>
 }
 ```
 
-`funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem está logado no painel. O corpo de **Modelar** é o mesmo, com `"action": "modelar"`.
+A linha em `offer_actions` é criada antes do POST. `action_id` é o `id` dessa linha e é o mesmo valor do `PATCH /api/offer-actions/:id`. `funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem está logado no painel. O corpo de **Modelar** é o mesmo, com `"action": "modelar"`.
 
 Status do pedido: `pending`, `sent`, `failed`, `done`. O botão mostra “Pedido enviado” depois do POST aceito, “Falhou” se o webhook recusar ou estourar o tempo, e o link “Pasta no Drive” quando o bot marcar `done` com `result_url`.
 
