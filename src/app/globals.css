@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #1c2c22;
+  --color-background: #000000;
   --color-foreground: #ffffff;
   --color-gold: #e6b869;
   --color-gold-deep: #c9963e;
-  --color-panel: #24382d;
-  --color-panel-2: #2c4336;
-  --color-line: #3e5648;
+  --color-panel: #111111;
+  --color-panel-2: #161616;
+  --color-line: #2a2a2a;
   --color-muted: #d5ddd7;
   --color-danger: #ffb4a8;
   --font-sans: var(--font-source), "Segoe UI", sans-serif;
   --font-display: var(--font-fraunces), Georgia, serif;
+  --font-subtitle: var(--font-inter), "Inter", sans-serif;
 }
 
 html {
   color-scheme: dark;
-  background: #1c2c22;
+  background: #000000;
 }
 
 body {
-  background: #1c2c22;
+  background: #000000;
   color: #ffffff;
   font-family: var(--font-sans);
 }
@@ -38,7 +39,12 @@ input[type="radio"] {
   accent-color: #e6b869;
 }
 
+.font-subtitle {
+  font-family: var(--font-subtitle), "Inter", sans-serif;
+  font-weight: 700;
+}
+
 ::selection {
   background: #e6b869;
-  color: #1c2c22;
+  color: #000000;
 }

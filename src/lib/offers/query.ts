@@ -1,11 +1,12 @@
 import type { OfferCard } from "./types";
-import type { Opportunity } from "./schema";
+
+export type ScoreFilter = "0" | "1" | "2" | "3" | "4" | "5" | "nao_avaliada";
 
 export type OfferFilters = {
   q: string;
   nicho: string[];
   idioma: string[];
-  oportunidade: Opportunity[];
+  oportunidade: ScoreFilter[];
   ordem: "anuncios" | "crescimento" | "recentes";
 };
 
@@ -21,7 +22,7 @@ export function parseFilters(params: {
     q: first(params.q) ?? "",
     nicho: many(params.nicho),
     idioma: many(params.idioma),
-    oportunidade: many(params.oportunidade).filter(isOpportunity),
+    oportunidade: many(params.oportunidade).filter(isScoreFilter),
     ordem:
       ordem === "crescimento" || ordem === "recentes" || ordem === "anuncios"
         ? ordem
@@ -36,10 +37,7 @@ export function filterAndSort(cards: OfferCard[], filters: OfferFilters) {
     if (filters.idioma.length > 0 && !filters.idioma.includes(card.language_country ?? "")) {
       return false;
     }
-    if (
-      filters.oportunidade.length > 0 &&
-      !filters.oportunidade.includes(card.opportunity)
-    ) {
+    if (filters.oportunidade.length > 0 && !matchesScore(card.opportunity_score, filters.oportunidade)) {
       return false;
     }
     if (!query) return true;
@@ -105,12 +103,11 @@ function many(value: string | string[] | undefined) {
   return Array.isArray(value) ? value.filter(Boolean) : [value];
 }
 
-function isOpportunity(value: string): value is Opportunity {
-  return (
-    value === "alta" ||
-    value === "media" ||
-    value === "baixa" ||
-    value === "nenhuma" ||
-    value === "nao_avaliada"
-  );
+function isScoreFilter(value: string): value is ScoreFilter {
+  return value === "nao_avaliada" || value === "0" || value === "1" || value === "2" || value === "3" || value === "4" || value === "5";
+}
+
+function matchesScore(score: number | null, selected: ScoreFilter[]) {
+  if (score == null) return selected.includes("nao_avaliada");
+  return selected.includes(String(score) as ScoreFilter);
 }

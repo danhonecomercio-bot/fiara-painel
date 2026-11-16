@@ -25,7 +25,9 @@ export type OfferDetail = {
   niche: string | null;
   language_country: string | null;
   opportunity: Opportunity;
+  opportunity_score: number | null;
   opportunity_notes: string | null;
+  google_library_url: string | null;
   expert: boolean;
   promise: string | null;
   front_ticket: string | null;
@@ -51,6 +53,7 @@ export type OfferCard = {
   niche: string | null;
   language_country: string | null;
   opportunity: Opportunity;
+  opportunity_score: number | null;
   expert: boolean;
   promise: string | null;
   front_ticket: string | null;

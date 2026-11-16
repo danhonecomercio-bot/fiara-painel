@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stripTracking } from "./format";
 
 export const OPPORTUNITIES = [
   "alta",
@@ -23,6 +24,15 @@ export const OPPORTUNITY_LABEL: Record<(typeof OPPORTUNITIES)[number], string> =
 const optionalText = (max: number) =>
   z.string().trim().max(max).nullable().optional();
 
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export const librarySchema = z
   .object({
     page_name: z.string().trim().min(1, "Informe page_name.").max(200),
@@ -31,14 +41,8 @@ export const librarySchema = z
       .trim()
       .min(1, "Informe library_url.")
       .max(2000)
-      .refine((value) => {
-        try {
-          const url = new URL(value);
-          return url.protocol === "http:" || url.protocol === "https:";
-        } catch {
-          return false;
-        }
-      }, "library_url precisa ser uma URL http(s)."),
+      .transform(stripTracking)
+      .refine((value) => isHttpUrl(value), "library_url precisa ser uma URL http(s)."),
     active_ads: z
       .number()
       .int("active_ads precisa ser inteiro.")
@@ -62,7 +66,13 @@ export const upsellSchema = z
       errorMap: () => ({ message: "kind precisa ser upsell ou downsell." }),
     }),
     title: z.string().trim().min(1, "Informe o título do upsell.").max(300),
-    url: optionalText(2000),
+    url: z
+      .string()
+      .trim()
+      .max(2000)
+      .nullable()
+      .optional()
+      .transform((value) => (value ? stripTracking(value) : value)),
     price: optionalText(120),
   })
   .strict();
@@ -71,7 +81,27 @@ const offerFields = {
   niche: optionalText(120),
   language_country: optionalText(120),
   opportunity: z.enum(OPPORTUNITIES).optional(),
+  opportunity_score: z
+    .number()
+    .int("opportunity_score precisa ser inteiro.")
+    .min(0, "opportunity_score vai de 0 a 5.")
+    .max(5, "opportunity_score vai de 0 a 5.")
+    .nullable()
+    .optional(),
   opportunity_notes: optionalText(8000),
+  google_library_url: z
+    .string()
+    .trim()
+    .max(2000)
+    .nullable()
+    .optional()
+    .transform((value) => {
+      if (value == null || value === "") return value === undefined ? undefined : null;
+      return stripTracking(value);
+    })
+    .refine((value) => value == null || value === "" || isHttpUrl(value), {
+      message: "google_library_url precisa ser uma URL http(s).",
+    }),
   expert: z.boolean().optional(),
   promise: optionalText(2000),
   front_ticket: optionalText(200),
@@ -81,8 +111,17 @@ const offerFields = {
     .regex(/^\d{4}-\d{2}-\d{2}$/, "running_since precisa ser YYYY-MM-DD.")
     .nullable()
     .optional(),
-  destination_urls: z.array(z.string().trim().min(1).max(2000)).max(40).optional(),
-  checkout_url: optionalText(2000),
+  destination_urls: z
+    .array(z.string().trim().min(1).max(2000).transform(stripTracking))
+    .max(40)
+    .optional(),
+  checkout_url: z
+    .string()
+    .trim()
+    .max(2000)
+    .nullable()
+    .optional()
+    .transform((value) => (value ? stripTracking(value) : value)),
   order_bumps: z.array(orderBumpSchema).max(20).optional(),
   upsells: z.array(upsellSchema).max(20).optional(),
   modeling_notes: optionalText(8000),
@@ -100,7 +139,10 @@ export const minedOfferSchema = z
       .regex(/^[^\s/]+$/, "slug não pode ter espaço nem barra."),
     title: z.string().trim().min(1, "Informe o título.").max(300),
     ...offerFields,
-    libraries: z.array(librarySchema).max(40),
+    libraries: z
+    .array(librarySchema)
+    .min(1, "Informe ao menos uma biblioteca da Meta.")
+    .max(40),
     captured_at: z
       .string()
       .refine((value) => !Number.isNaN(Date.parse(value)), "captured_at inválido.")

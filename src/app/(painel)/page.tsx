@@ -28,7 +28,7 @@ export default async function OfertasPage({
   languages.sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   const ads = offers.reduce((sum, offer) => sum + (offer.total_active_ads ?? 0), 0);
-  const altas = offers.filter((offer) => offer.opportunity === "alta").length;
+  const altas = offers.filter((offer) => (offer.opportunity_score ?? -1) >= 4).length;
   const examples = cards.some((card) => card.is_example);
 
   return (
@@ -41,7 +41,7 @@ export default async function OfertasPage({
         </p>
         <p className="text-sm tabular-nums">
           {offers.length} {offers.length === 1 ? "oferta" : "ofertas"} neste filtro · {ads} anúncios na
-          última leitura · {altas} {altas === 1 ? "oportunidade alta" : "oportunidades altas"}
+          última leitura · {altas} {altas === 1 ? "nota 4 ou 5" : "notas 4 ou 5"}
         </p>
         {examples ? (
           <p className="text-sm text-gold">
@@ -52,7 +52,7 @@ export default async function OfertasPage({
       <OfferFilters niches={niches} languages={languages} />
       {offers.length === 0 ? (
         <div className="rounded-md border border-line bg-panel px-4 py-8">
-          <h2 className="font-display text-2xl text-gold">Nenhuma oferta com esses filtros.</h2>
+          <h2 className="font-subtitle text-2xl text-gold">Nenhuma oferta com esses filtros.</h2>
           <p className="mt-2 text-sm text-muted">Limpe a busca ou escolha outro nicho.</p>
         </div>
       ) : (

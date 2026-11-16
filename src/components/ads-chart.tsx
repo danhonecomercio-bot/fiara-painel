@@ -51,7 +51,7 @@ export function AdsChart({ snapshots }: { snapshots: SnapshotRow[] }) {
           const value = Math.round(max - span * step);
           return (
             <g key={step}>
-              <line x1={padLeft} x2={width - padRight} y1={y} y2={y} stroke="#3e5648" />
+              <line x1={padLeft} x2={width - padRight} y1={y} y2={y} stroke="#2a2a2a" />
               <text x={padLeft - 8} y={y + 4} textAnchor="end" fill="#d5ddd7" fontSize="11">
                 {value}
               </text>

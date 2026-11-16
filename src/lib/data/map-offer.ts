@@ -20,7 +20,9 @@ export function mapOfferRow(row: unknown): OfferDetail {
     niche: asNullableString(record.niche),
     language_country: asNullableString(record.language_country),
     opportunity: asOpportunity(record.opportunity),
+    opportunity_score: scoreFromRow(record),
     opportunity_notes: asNullableString(record.opportunity_notes),
+    google_library_url: asNullableString(record.google_library_url),
     expert: record.expert === true,
     promise: asNullableString(record.promise),
     front_ticket: asNullableString(record.front_ticket),
@@ -49,6 +51,7 @@ export function mapCardRow(row: unknown): OfferCard {
     niche: asNullableString(record.niche),
     language_country: asNullableString(record.language_country),
     opportunity: asOpportunity(record.opportunity),
+    opportunity_score: scoreFromRow(record),
     expert: record.expert === true,
     promise: asNullableString(record.promise),
     front_ticket: asNullableString(record.front_ticket),
@@ -129,6 +132,21 @@ function asStringArray(value: unknown) {
 function asObjectArray<T>(value: unknown): T[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is T => Boolean(item) && typeof item === "object");
+}
+
+function scoreFromRow(record: Record<string, unknown>) {
+  if ("opportunity_score" in record) return asScore(record.opportunity_score);
+  const opportunity = asOpportunity(record.opportunity);
+  if (opportunity === "alta") return 5;
+  if (opportunity === "media") return 3;
+  if (opportunity === "baixa") return 1;
+  if (opportunity === "nenhuma") return 0;
+  return null;
+}
+
+function asScore(value: unknown) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 5) return null;
+  return value;
 }
 
 function asOpportunity(value: unknown): Opportunity {

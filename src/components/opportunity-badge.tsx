@@ -1,23 +1,22 @@
-import { OPPORTUNITY_LABEL, type Opportunity } from "@/lib/offers/schema";
 import { cn } from "@/lib/utils";
 
-const styles: Record<Opportunity, string> = {
-  alta: "bg-gold text-background",
-  media: "border border-gold text-white",
-  baixa: "border border-white/40 text-white",
-  nenhuma: "border border-white/25 text-muted",
-  nao_avaliada: "border border-dashed border-gold text-white",
-};
+export function OpportunityBadge({ score }: { score: number | null }) {
+  if (score == null) {
+    return (
+      <span className="inline-flex items-center whitespace-nowrap rounded border border-dashed border-gold px-1.5 py-0.5 text-xs font-semibold leading-5 text-white">
+        Não avaliada
+      </span>
+    );
+  }
 
-export function OpportunityBadge({ value }: { value: Opportunity }) {
   return (
     <span
       className={cn(
         "inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-semibold leading-5",
-        styles[value],
+        score >= 4 ? "bg-gold text-black" : "border border-gold text-white",
       )}
     >
-      {OPPORTUNITY_LABEL[value]}
+      Nota {score}
     </span>
   );
 }

@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { adsReadout, formatCalendarDate, formatSince, formatUpdated, heatPrefix } from "./format";
+import {
+  adsReadout,
+  formatBumpPrice,
+  formatCalendarDate,
+  formatSince,
+  formatUpdated,
+  heatPrefix,
+  stripTracking,
+} from "./format";
 
 describe("leitura de anúncios", () => {
   it("formata o delta no horário de Brasília", () => {
@@ -28,5 +36,18 @@ describe("leitura de anúncios", () => {
 
   it("formata data de calendário sem deslocar o dia", () => {
     assert.equal(formatCalendarDate("2026-06-03"), "03/06/2026");
+  });
+
+  it("junta o preço do order bump numa linha e tira o rastreio da URL", () => {
+    assert.equal(formatBumpPrice("R$ 27", "3x R$ 10,11"), "R$ 27 (ou 3x de R$10,11)");
+    assert.equal(formatBumpPrice("R$ 27", null), "R$ 27");
+    assert.equal(
+      stripTracking("https://oferta.exemplo/quiz?utm_source=meta&fbclid=abc&id=1&src=meta&sck=1"),
+      "https://oferta.exemplo/quiz?id=1",
+    );
+    assert.equal(
+      stripTracking("https://oferta.exemplo/vsl?gclid=1&gbraid=2&utm_campaign=x"),
+      "https://oferta.exemplo/vsl",
+    );
   });
 });

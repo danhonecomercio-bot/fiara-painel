@@ -141,21 +141,44 @@ describe("API dos bots", () => {
     assert.equal(repo.listCards().length, 0);
 
     await postOffers(
-      authorized({ slug: "boa", title: "Boa", libraries: [] }),
+      authorized({
+        slug: "boa",
+        title: "Boa",
+        destination_urls: ["https://oferta.exemplo/quiz?utm_source=meta&fbclid=abc&id=9"],
+        libraries: [
+          {
+            page_name: "Página",
+            library_url: "https://www.facebook.com/ads/library/?id=9&utm_source=meta&fbclid=abc",
+            active_ads: 1,
+          },
+        ],
+      }),
       repo,
       KEY,
     );
     const before = repo.getDetail("boa")?.snapshots.length;
 
+    assert.equal(
+      repo.getDetail("boa")?.destination_urls[0],
+      "https://oferta.exemplo/quiz?id=9",
+    );
+    assert.equal(
+      repo.getDetail("boa")?.libraries[0]?.library_url,
+      "https://www.facebook.com/ads/library/?id=9",
+    );
+
     const patched = await patchOfferBySlug(
-      authorized({ opportunity: "alta", opportunity_notes: "Escala consistente." }, "PATCH"),
+      authorized(
+        { opportunity_score: 4, opportunity_notes: "Escala consistente." },
+        "PATCH",
+      ),
       "boa",
       repo,
       KEY,
     );
     assert.equal(patched.status, 200);
     const body = await patched.json();
-    assert.equal(body.offer.opportunity, "alta");
+    assert.equal(body.offer.opportunity_score, 4);
     assert.equal(body.offer.opportunity_notes, "Escala consistente.");
     assert.equal(repo.getDetail("boa")?.snapshots.length, before);
 

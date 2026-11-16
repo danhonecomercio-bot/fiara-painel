@@ -8,7 +8,9 @@ const OFFER_COLUMNS = [
   "niche",
   "language_country",
   "opportunity",
+  "opportunity_score",
   "opportunity_notes",
+  "google_library_url",
   "expert",
   "promise",
   "front_ticket",
@@ -24,7 +26,7 @@ const OFFER_COLUMNS = [
 ] as const;
 
 const OFFER_SELECT = `
-  id, slug, title, niche, language_country, opportunity, opportunity_notes,
+  id, slug, title, niche, language_country, opportunity, opportunity_score, opportunity_notes, google_library_url,
   expert, promise, front_ticket, funnel_model, running_since,
   destination_urls, checkout_url, order_bumps, upsells, modeling_notes,
   raw, status, created_at, updated_at,

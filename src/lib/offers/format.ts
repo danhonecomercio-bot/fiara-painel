@@ -61,6 +61,70 @@ export function formatSaoPauloDate(input: string | Date) {
   return `${map.get("day")}/${map.get("month")}/${map.get("year")}`;
 }
 
+const TRACKING_PARAMS = new Set([
+  "fbclid",
+  "gclid",
+  "gbraid",
+  "wbraid",
+  "dclid",
+  "msclkid",
+  "ttclid",
+  "twclid",
+  "yclid",
+  "igshid",
+  "igsh",
+  "mc_cid",
+  "mc_eid",
+  "src",
+  "sck",
+  "fb_source",
+  "fb_action_ids",
+  "fb_action_types",
+  "li_fat_id",
+  "sccid",
+  "epik",
+  "irclickid",
+  "gad_source",
+  "gad_campaignid",
+  "_ga",
+  "_gl",
+  "ref_src",
+]);
+
+export function stripTracking(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return trimmed;
+  const hasProtocol = /^https?:\/\//i.test(trimmed);
+  try {
+    const url = new URL(hasProtocol ? trimmed : `https://${trimmed}`);
+    for (const key of [...url.searchParams.keys()]) {
+      const lower = key.toLowerCase();
+      if (lower.startsWith("utm_") || TRACKING_PARAMS.has(lower)) url.searchParams.delete(key);
+    }
+    const serialized = url.toString();
+    return hasProtocol ? serialized : serialized.replace(/^https?:\/\//, "");
+  } catch {
+    return trimmed;
+  }
+}
+
+export function formatBumpPrice(cash?: string | null, installments?: string | null) {
+  const cashText = cash?.trim() || "";
+  const installmentText = formatInstallmentPhrase(installments);
+  if (cashText && installmentText) return `${cashText} (ou ${installmentText})`;
+  if (cashText) return cashText;
+  if (installmentText) return installmentText;
+  return null;
+}
+
+function formatInstallmentPhrase(value?: string | null) {
+  const text = value?.trim();
+  if (!text) return null;
+  const match = text.match(/(\d+)\s*x\s*(?:de\s*)?R\$\s*([\d.,]+)/i);
+  if (!match) return text;
+  return `${match[1]}x de R$${match[2]}`;
+}
+
 export function formatCalendarDate(isoDate: string) {
   const [year, month, day] = isoDate.slice(0, 10).split("-");
   if (!year || !month || !day) return isoDate;

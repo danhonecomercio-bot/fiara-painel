@@ -4,7 +4,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { OPPORTUNITIES, OPPORTUNITY_LABEL } from "@/lib/offers/schema";
+const SCORE_OPTIONS = ["5", "4", "3", "2", "1", "0", "nao_avaliada"] as const;
+const SCORE_LABEL: Record<(typeof SCORE_OPTIONS)[number], string> = {
+  "5": "5",
+  "4": "4",
+  "3": "3",
+  "2": "2",
+  "1": "1",
+  "0": "0",
+  nao_avaliada: "Não avaliada",
+};
 
 export function OfferFilters({
   niches,
@@ -81,9 +90,9 @@ export function OfferFilters({
           key={`oportunidade-${selectedOportunidade.join("|")}`}
           label="Oportunidade"
           param="oportunidade"
-          options={[...OPPORTUNITIES]}
+          options={[...SCORE_OPTIONS]}
           selected={selectedOportunidade}
-          labels={OPPORTUNITY_LABEL}
+          labels={SCORE_LABEL}
         />
         <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-gold lg:ml-auto">
           Ordenar

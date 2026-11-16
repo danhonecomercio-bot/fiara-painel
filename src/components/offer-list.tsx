@@ -44,7 +44,7 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
                 <td className="px-3 py-2.5">{offer.language_country ?? "—"}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap">{offer.funnel_model ?? "—"}</td>
                 <td className="px-3 py-2.5">
-                  <OpportunityBadge value={offer.opportunity} />
+                  <OpportunityBadge score={offer.opportunity_score} />
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted">
                   {offer.last_captured_at ? formatUpdated(offer.last_captured_at) : "sem leitura"}
@@ -66,7 +66,7 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
     >
       <div className="flex items-start justify-between gap-3">
         <OfferTitle offer={offer} linked={false} />
-        <OpportunityBadge value={offer.opportunity} />
+        <OpportunityBadge score={offer.opportunity_score} />
       </div>
       <AdsReadout
         total={offer.total_active_ads}

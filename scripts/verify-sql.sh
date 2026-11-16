@@ -8,6 +8,7 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -c "drop database if exists ${db};"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -c "create database ${db};"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261116140645_create_offer_swipe_file.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/seed.sql"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261116183000_opportunity_score_google_library_actions.sql"
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" <<'SQL'
 set role authenticated;
@@ -27,6 +28,13 @@ begin
   where slug = 'exemplo-protocolo-queima-21';
   if total <> 546 or previous <> 466 then
     raise exception 'queima: % / %', total, previous;
+  end if;
+
+  if (select opportunity_score from public.offer_cards where slug = 'exemplo-protocolo-queima-21') <> 5 then
+    raise exception 'queima sem nota 5';
+  end if;
+  if (select opportunity_score from public.offer_cards where slug = 'exemplo-reconquista-14-dias') is not null then
+    raise exception 'reconquista deveria seguir sem nota';
   end if;
 
   select total_active_ads, prev_total_active_ads

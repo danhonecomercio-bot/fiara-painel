@@ -2,12 +2,23 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AdsChart } from "@/components/ads-chart";
 import { AdsReadout } from "@/components/ads-readout";
+import { OfferActions } from "@/components/offer-actions";
 import { OpportunityBadge } from "@/components/opportunity-badge";
-import { formatCalendarDate, formatUpdated, heatLabel, heatPrefix } from "@/lib/offers/format";
-import { OPPORTUNITY_LABEL } from "@/lib/offers/schema";
+import type { OfferAction } from "@/lib/actions/types";
+import { formatBumpPrice, formatCalendarDate, formatUpdated, heatLabel, heatPrefix, stripTracking } from "@/lib/offers/format";
 import type { OfferDetail } from "@/lib/offers/types";
 
-export function OfferDetailView({ offer }: { offer: OfferDetail }) {
+export function OfferDetailView({
+  offer,
+  actions,
+  topadsReady,
+  modelarReady,
+}: {
+  offer: OfferDetail;
+  actions: OfferAction[];
+  topadsReady: boolean;
+  modelarReady: boolean;
+}) {
   const latest = offer.snapshots[0] ?? null;
   const previous = offer.snapshots[1] ?? null;
   const prefix = heatPrefix(latest?.total_active_ads ?? null);
@@ -25,7 +36,7 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
               exemplo
             </span>
           ) : null}
-          <OpportunityBadge value={offer.opportunity} />
+          <OpportunityBadge score={offer.opportunity_score} />
           {offer.status === "paused" ? (
             <span className="rounded border border-white/30 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
               Pausada
@@ -39,6 +50,13 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
           {prefix ? <span aria-hidden="true">{prefix} </span> : null}
           {offer.title}
         </h1>
+        <LibraryLinks offer={offer} />
+        <OfferActions
+          slug={offer.slug}
+          initial={actions}
+          topadsReady={topadsReady}
+          modelarReady={modelarReady}
+        />
         <p className="text-sm text-muted">
           {latest ? formatUpdated(latest.captured_at) : "sem leitura"} · slug {offer.slug}
         </p>
@@ -61,11 +79,13 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
         <dl>
           <Field label="Nicho">{text(offer.niche)}</Field>
           <Field label="Idioma/país">{text(offer.language_country)}</Field>
-          <Field label="Oportunidade">{OPPORTUNITY_LABEL[offer.opportunity]}</Field>
+          <Field label="Oportunidade">
+            {offer.opportunity_score == null ? "Não avaliada" : `Nota ${offer.opportunity_score}`}
+          </Field>
           <Field label="Notas de oportunidade">{text(offer.opportunity_notes)}</Field>
           <Field label="Expert">{offer.expert ? "Sim" : "Não"}</Field>
           <Field label="Promessa">{text(offer.promise)}</Field>
-          <Field label="Ticket de frente">{text(offer.front_ticket)}</Field>
+          <Field label="TM do Front">{text(offer.front_ticket)}</Field>
           <Field label="Funil">{text(offer.funnel_model)}</Field>
           <Field label="No ar desde">
             {offer.running_since ? formatCalendarDate(offer.running_since) : "—"}
@@ -92,8 +112,9 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
                   <li key={`${bump.title}-${index}`} className="grid gap-0.5">
                     <span className="font-semibold">{bump.title}</span>
                     {bump.description ? <span>{bump.description}</span> : null}
-                    {bump.price_cash ? <span>À vista: {bump.price_cash}</span> : null}
-                    {bump.price_installments ? <span>Parcelado: {bump.price_installments}</span> : null}
+                    {formatBumpPrice(bump.price_cash, bump.price_installments) ? (
+                      <span>{formatBumpPrice(bump.price_cash, bump.price_installments)}</span>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -121,7 +142,7 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
       </div>
 
       <section className="grid gap-3">
-        <h2 className="font-display text-2xl text-gold">Bibliotecas</h2>
+        <h2 className="font-subtitle text-2xl text-gold">Bibliotecas</h2>
         {offer.libraries.length === 0 ? (
           <p className="text-sm">Nenhuma biblioteca vinculada.</p>
         ) : (
@@ -133,7 +154,6 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
                 <li key={library.library_url} className="grid gap-0.5 rounded-md border border-line bg-panel px-3 py-2">
                   <span className="font-semibold">{library.page_name}</span>
                   <span className="tabular-nums">{library.active_ads} anúncios ativos</span>
-                  <ExternalLink href={library.library_url} />
                 </li>
               ))}
           </ul>
@@ -141,12 +161,12 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-display text-2xl text-gold">Histórico de anúncios ativos</h2>
+        <h2 className="font-subtitle text-2xl text-gold">Histórico de anúncios ativos</h2>
         <AdsChart snapshots={offer.snapshots} />
       </section>
 
       <section className="grid gap-3">
-        <h2 className="font-display text-2xl text-gold">Notas de modelagem</h2>
+        <h2 className="font-subtitle text-2xl text-gold">Notas de modelagem</h2>
         <p className="whitespace-pre-wrap text-sm leading-6">{offer.modeling_notes || "—"}</p>
       </section>
 
@@ -165,7 +185,7 @@ export function OfferDetailView({ offer }: { offer: OfferDetail }) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid gap-1 border-b border-line py-3">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-gold">{label}</dt>
+      <dt className="font-subtitle text-xs uppercase tracking-wide text-gold">{label}</dt>
       <dd className="text-sm leading-6 text-white">{children}</dd>
     </div>
   );
@@ -190,8 +210,37 @@ function LineList<T extends string>({
   );
 }
 
+function LibraryLinks({ offer }: { offer: OfferDetail }) {
+  const meta = offer.libraries.map((library) => stripTracking(library.library_url));
+  const google = offer.google_library_url ? stripTracking(offer.google_library_url) : null;
+  if (meta.length === 0 && !google) return null;
+  return (
+    <div className="grid gap-3">
+      {meta.length > 0 ? (
+        <div className="grid gap-1">
+          <p className="font-subtitle text-xs uppercase tracking-wide text-gold">Biblioteca da Meta</p>
+          <ul className="grid gap-1">
+            {meta.map((href, index) => (
+              <li key={`${href}-${index}`}>
+                <ExternalLink href={href} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {google ? (
+        <div className="grid gap-1">
+          <p className="font-subtitle text-xs uppercase tracking-wide text-gold">Biblioteca do Google</p>
+          <ExternalLink href={google} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function ExternalLink({ href }: { href: string }) {
-  const url = href.startsWith("http://") || href.startsWith("https://") ? href : `https://${href}`;
+  const clean = stripTracking(href);
+  const url = clean.startsWith("http://") || clean.startsWith("https://") ? clean : `https://${clean}`;
   return (
     <a
       href={url}
@@ -199,7 +248,7 @@ function ExternalLink({ href }: { href: string }) {
       rel="noreferrer"
       className="break-all text-gold underline decoration-gold/40 underline-offset-2 hover:decoration-gold"
     >
-      {href}
+      {clean}
     </a>
   );
 }

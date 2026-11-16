@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Source_Sans_3 } from "next/font/google";
+import { Fraunces, Inter, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 
 const sourceSans = Source_Sans_3({
@@ -14,6 +14,12 @@ const fraunces = Fraunces({
   weight: ["600", "700"],
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["700"],
+});
+
 export const metadata: Metadata = {
   title: {
     default: "Painel Fiara",
@@ -25,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${sourceSans.variable} ${fraunces.variable} h-full`}>
+    <html lang="pt-BR" className={`${sourceSans.variable} ${fraunces.variable} ${inter.variable} h-full`}>
       <body className="min-h-full bg-background font-sans text-foreground antialiased">{children}</body>
     </html>
   );

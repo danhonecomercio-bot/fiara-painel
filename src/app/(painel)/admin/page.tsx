@@ -44,7 +44,7 @@ export default async function AdminPage() {
         </ul>
       </section>
       <section className="rounded-md border border-line bg-panel p-4">
-        <h2 className="mb-4 font-display text-2xl text-gold">Novo membro</h2>
+        <h2 className="font-subtitle mb-4 text-2xl text-gold">Novo membro</h2>
         <MemberForm />
       </section>
     </div>

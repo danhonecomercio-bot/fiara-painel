@@ -12,11 +12,11 @@ export type CurrentUser = {
   role: "admin" | "member";
 };
 
-export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+export async function readCurrentUser(): Promise<CurrentUser | null> {
   if (isDemoMode()) {
     const token = (await cookies()).get("fiara_demo")?.value;
     const session = readDemoSession(token);
-    if (!session) redirect("/login");
+    if (!session) return null;
     return {
       id: `demo:${session.email}`,
       email: session.email,
@@ -26,7 +26,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims?.sub) redirect("/login");
+  if (error || !data?.claims?.sub) return null;
 
   const email = typeof data.claims.email === "string" ? data.claims.email : "";
   return {
@@ -34,6 +34,12 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
     email,
     role: roleFromMetadata(data.claims.app_metadata),
   };
+}
+
+export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
+  const user = await readCurrentUser();
+  if (!user) redirect("/login");
+  return user;
 });
 
 function roleFromMetadata(value: unknown): "admin" | "member" {

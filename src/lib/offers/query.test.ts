@@ -9,6 +9,7 @@ function card(partial: Partial<OfferCard> & Pick<OfferCard, "slug" | "title">): 
     niche: null,
     language_country: null,
     opportunity: "nao_avaliada",
+    opportunity_score: null,
     expert: false,
     promise: null,
     front_ticket: null,
@@ -34,6 +35,7 @@ const cards = [
     niche: "Emagrecimento",
     language_country: "Português / Brasil",
     opportunity: "alta",
+    opportunity_score: 5,
     total_active_ads: 546,
     prev_total_active_ads: 466,
     promise: "Perca peso",
@@ -45,6 +47,7 @@ const cards = [
     niche: "Finanças",
     language_country: "Português / Brasil",
     opportunity: "media",
+    opportunity_score: 3,
     total_active_ads: 248,
     prev_total_active_ads: 138,
   }),
@@ -63,7 +66,7 @@ const cards = [
 describe("filtros", () => {
   it("aceita oportunidade em multi-seleção e busca sem acento", () => {
     const filters = parseFilters({
-      oportunidade: ["alta", "media"],
+      oportunidade: ["5", "3"],
       q: "perca",
     });
     const result = filterAndSort(cards, filters);

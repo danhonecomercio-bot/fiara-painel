@@ -83,6 +83,9 @@ export const EXAMPLE_OFFERS: ExampleOffer[] = [
       niche: "Emagrecimento",
       language_country: "Português / Brasil",
       opportunity: "alta",
+      opportunity_score: 5,
+      google_library_url:
+        "https://adstransparency.google.com/advertiser/AR-exemplo-queima?region=BR",
       opportunity_notes:
         "Criativo de antes e depois com quiz curto. O salto de anúncios na última madrugada sugere escala ativa. Modelar o quiz, não a página de vendas.",
       expert: true,
@@ -137,6 +140,7 @@ export const EXAMPLE_OFFERS: ExampleOffer[] = [
       niche: "Finanças",
       language_country: "Português / Brasil",
       opportunity: "media",
+      opportunity_score: 3,
       opportunity_notes:
         "SaaS de assinatura baixa, sem expert na capa. O volume subiu forte na leitura das 7h. Oportunidade média até a análise confirmar se o criativo aguenta.",
       expert: false,
