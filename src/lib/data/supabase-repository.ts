@@ -9,6 +9,7 @@ const OFFER_COLUMNS = [
   "language_country",
   "opportunity",
   "opportunity_score",
+  "score_breakdown",
   "opportunity_notes",
   "google_library_url",
   "expert",
@@ -22,23 +23,37 @@ const OFFER_COLUMNS = [
   "upsells",
   "modeling_notes",
   "language_scan",
+  "modeling_check",
   "raw",
   "status",
 ] as const;
 
 const OFFER_SELECT = `
-  id, slug, title, niche, language_country, opportunity, opportunity_score, opportunity_notes, google_library_url,
+  id, slug, title, niche, language_country, opportunity, opportunity_score, score_breakdown, opportunity_notes, google_library_url,
   expert, promise, front_ticket, funnel_model, running_since,
-  destination_urls, checkout_url, order_bumps, upsells, modeling_notes, language_scan,
+  destination_urls, checkout_url, order_bumps, upsells, modeling_notes, language_scan, modeling_check,
   raw, status, created_at, updated_at,
   offer_libraries (page_name, library_url, active_ads),
   offer_snapshots (captured_at, total_active_ads, per_library)
 `;
 
-const OFFER_SELECT_LEGACY = OFFER_SELECT.replace("modeling_notes, language_scan,", "modeling_notes,");
+const OPTIONAL_COLUMNS = [
+  "score_breakdown",
+  "modeling_check",
+  "language_scan",
+  "opportunity_score",
+  "google_library_url",
+];
 
-function missingScan(message: string) {
-  return /language_scan/.test(message);
+function selectWithout(message: string) {
+  return OPTIONAL_COLUMNS.reduce((sql, column) => {
+    if (!message.includes(column)) return sql;
+    return sql.replace(new RegExp(`,\\s*${column}\\b`), "");
+  }, OFFER_SELECT);
+}
+
+function mentionsMissingColumn(message: string) {
+  return OPTIONAL_COLUMNS.some((column) => message.includes(column));
 }
 
 export class SupabaseOfferRepository implements OfferRepository {
@@ -122,8 +137,15 @@ export class SupabaseOfferRepository implements OfferRepository {
       .select(OFFER_SELECT)
       .maybeSingle();
     const row =
-      first.error && missingScan(first.error.message) && payload.language_scan === undefined
-        ? await this.client.from("offers").update(payload).eq("slug", slug).select(OFFER_SELECT_LEGACY).maybeSingle()
+      first.error &&
+      mentionsMissingColumn(first.error.message) &&
+      !OPTIONAL_COLUMNS.some((column) => first.error?.message.includes(column) && payload[column] !== undefined)
+        ? await this.client
+            .from("offers")
+            .update(payload)
+            .eq("slug", slug)
+            .select(selectWithout(first.error.message))
+            .maybeSingle()
         : first;
     if (row.error) throw new Error(row.error.message);
     if (!row.data) return null;
@@ -152,10 +174,10 @@ export class SupabaseOfferRepository implements OfferRepository {
     const first = await request;
     let rows: unknown[] = first.data ?? [];
     let failure = first.error?.message ?? null;
-    if (first.error && missingScan(first.error.message)) {
+    if (first.error && mentionsMissingColumn(first.error.message)) {
       let legacy = this.client
         .from("offers")
-        .select(OFFER_SELECT_LEGACY)
+        .select(selectWithout(first.error.message))
         .order("updated_at", { ascending: false })
         .order("captured_at", { referencedTable: "offer_snapshots", ascending: false })
         .limit(30, { referencedTable: "offer_snapshots" })

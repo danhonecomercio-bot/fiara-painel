@@ -1,9 +1,8 @@
 import { formatScore } from "@/lib/offers/format";
-import { isOpportunityScore } from "@/lib/offers/query";
 import { cn } from "@/lib/utils";
 
-export function OportunidadeMark({ score }: { score: number | null }) {
-  if (!isOpportunityScore(score)) return null;
+export function OportunidadeMark({ available }: { available: boolean }) {
+  if (!available) return null;
   return (
     <span className="inline-flex items-center whitespace-nowrap rounded bg-gold px-1.5 py-0.5 text-xs font-semibold leading-5 text-black">
       Oportunidade
@@ -24,7 +23,7 @@ export function OpportunityBadge({ score }: { score: number | null }) {
     <span
       className={cn(
         "inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-semibold leading-5",
-        score >= 4.5 ? "bg-gold text-black" : "border border-gold text-white",
+        score >= 4 ? "bg-gold text-black" : "border border-gold text-white",
       )}
     >
       Nota {formatScore(score)}

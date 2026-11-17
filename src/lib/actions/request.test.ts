@@ -15,6 +15,7 @@ function offer(): OfferDetail {
     language_country: null,
     opportunity: "nao_avaliada",
     opportunity_score: null,
+    score_breakdown: null,
     opportunity_notes: null,
     google_library_url: null,
     expert: false,
@@ -28,6 +29,7 @@ function offer(): OfferDetail {
     upsells: [],
     modeling_notes: null,
     language_scan: null,
+    modeling_check: null,
     raw: null,
     status: "active",
     created_at: "2026-11-16T10:00:00.000Z",
@@ -147,11 +149,11 @@ describe("webhook de ações", () => {
   });
 
   it("não repete a varredura automática se já existe pedido aberto ou concluído", () => {
-    assert.equal(shouldAutoVarredura(5, []), true);
-    assert.equal(shouldAutoVarredura(4, []), false);
+    assert.equal(shouldAutoVarredura(4, []), true);
+    assert.equal(shouldAutoVarredura(3.5, []), false);
     assert.equal(
-      shouldAutoVarredura(5, [{ action: "varredura_idiomas", status: "failed" }]),
-      true,
+      shouldAutoVarredura(4, [{ action: "varredura_idiomas", status: "failed" }]),
+      false,
     );
     assert.equal(
       shouldAutoVarredura(5, [{ action: "varredura_idiomas", status: "pending" }]),

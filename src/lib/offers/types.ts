@@ -2,7 +2,9 @@ import type {
   FunnelModel,
   Opportunity,
   LanguageScan,
+  ModelingCheck,
   OrderBump,
+  ScoreBreakdownItem,
   OfferStatus,
   Upsell,
 } from "./schema";
@@ -27,6 +29,7 @@ export type OfferDetail = {
   language_country: string | null;
   opportunity: Opportunity;
   opportunity_score: number | null;
+  score_breakdown: ScoreBreakdownItem[] | null;
   opportunity_notes: string | null;
   google_library_url: string | null;
   expert: boolean;
@@ -40,6 +43,7 @@ export type OfferDetail = {
   upsells: Upsell[];
   modeling_notes: string | null;
   language_scan: LanguageScan | null;
+  modeling_check: ModelingCheck | null;
   raw: Record<string, unknown> | null;
   status: OfferStatus;
   created_at: string;
@@ -56,6 +60,7 @@ export type OfferCard = {
   language_country: string | null;
   opportunity: Opportunity;
   opportunity_score: number | null;
+  modeling_opportunity: boolean;
   expert: boolean;
   promise: string | null;
   front_ticket: string | null;

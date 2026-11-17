@@ -96,7 +96,7 @@ export function OfferFilters({
         />
         <FilterMenu
           key={`oportunidade-${selectedOportunidade.join("|")}`}
-          label="Oportunidade"
+          label="Nota"
           param="oportunidade"
           options={[...SCORE_FILTERS]}
           selected={selectedOportunidade}
@@ -104,7 +104,7 @@ export function OfferFilters({
         />
         <label className="flex h-9 items-center gap-2 rounded-md border border-gold/50 bg-panel px-3 text-sm text-white">
           <input type="checkbox" checked={soOportunidades} onChange={toggleOportunidades} />
-          Só oportunidades (4,5+)
+          Só oportunidades
         </label>
         <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-gold lg:ml-auto">
           Ordenar

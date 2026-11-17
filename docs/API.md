@@ -136,9 +136,11 @@ curl -sS -X POST "$APP_URL/api/offers" \
 | `libraries` | Obrigatório. Pelo menos uma biblioteca da Meta. Cada `library_url` é http(s) e não pode repetir no mesmo payload. |
 | `google_library_url` | Opcional. URL http(s) do Google Ads Transparency Center. |
 | `opportunity` | Enum antigo, ainda aceito: `alta`, `media`, `baixa`, `nenhuma`, `nao_avaliada`. O painel não mostra mais esse valor. |
-| `opportunity_score` | Número de 0 a 5, de meio em meio (`0`, `0.5`, `1` … `5`), ou `null` para “não avaliada”. Nota `>= 4.5` marca a oferta como Oportunidade. |
+| `opportunity_score` | Número de 0 a 5, de meio em meio (`0`, `0.5`, `1` … `5`), ou `null` para “não avaliada”. Se `score_breakdown` vier no mesmo corpo, o servidor ignora este valor e grava a soma. |
+| `score_breakdown` | Opcional. Lista `{ criterion, detail, points }`. `points` de meio em meio. A soma vira `opportunity_score` e precisa ficar entre 0 e 5. |
+| `modeling_check` | Opcional. Objeto da verificação de modelagem, descrito abaixo. A oferta é uma Oportunidade quando existe e alguma técnica tem `available: true`. |
 | `language_scan` | Opcional. Objeto `{ ran_at, results }` descrito abaixo. `null` apaga. |
-| `funnel_model` | `Quiz`, `LP`, `Quiz+LP`, `Quiz+VSL`, `VSL` ou `null`. |
+| `funnel_model` | Texto livre, ou `null`. Valores canônicos: `LP`, `Quiz+LP`, `Quiz+MiniVSL`, `Quiz+VSL`, `VSL`, `Outro`. |
 | `status` | `active` ou `paused`. |
 | `running_since` | `YYYY-MM-DD` ou `null`. |
 | `captured_at` | ISO 8601. Não é coluna da oferta; só marca o snapshot. |
@@ -326,11 +328,45 @@ X-Automation-Key: <WEBHOOK_KEY>
 
 A linha em `offer_actions` é criada antes do POST. `action` é `baixar_top_ads`, `modelar`, `dissecar` ou `varredura_idiomas`. `action_id` é o `id` dessa linha e é o mesmo valor do `PATCH /api/offer-actions/:id`. `funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem clicou, ou `sistema` no disparo automático. O corpo de **Modelar**, **dissecar** e **varredura** é o mesmo, mudando só `action`.
 
-`dissecar` dispara sozinho no primeiro `POST` de um slug novo. Não dispara de novo nos snapshots seguintes. `varredura_idiomas` dispara sozinha quando um `PATCH` grava `opportunity_score >= 4.5` e a oferta ainda não tem varredura `pending`, `sent` ou `done`.
+`dissecar` dispara sozinho no primeiro `POST` de um slug novo. Não dispara de novo nos snapshots seguintes. `varredura_idiomas` dispara sozinha quando um `PATCH` grava `opportunity_score >= 4` e a oferta ainda não tem nenhum pedido `varredura_idiomas`.
+
+### score_breakdown
+
+```json
+{
+  "score_breakdown": [
+    { "criterion": "Escala", "detail": "Mais de 200 anúncios ativos.", "points": 2 },
+    { "criterion": "Criativo", "detail": "O anúncio principal segue claro.", "points": 2.5 }
+  ]
+}
+```
+
+A resposta grava `opportunity_score: 4.5`. Sem `score_breakdown`, o `PATCH` continua aceitando `opportunity_score` direto.
+
+### modeling_check
+
+```json
+{
+  "modeling_check": {
+    "checked_at": "2026-11-17T18:00:00.000Z",
+    "summary": "O quiz cabe no nosso formato.",
+    "techniques": [
+      {
+        "rank": 1,
+        "key": "quiz-curto",
+        "name": "Quiz curto",
+        "available": true,
+        "why": "A promessa cabe em poucas perguntas.",
+        "suggestion": "Modelar o quiz, não a VSL."
+      }
+    ]
+  }
+}
+```
 
 ### language_scan
 
-Chave de idioma ausente em `results`: aquele idioma não foi varrido. Lista vazia: foi varrido e não achou oferta. URLs perdem o mesmo rastreio dos outros campos.
+Chave de idioma ausente em `results`: aquele idioma não foi varrido. Lista vazia: foi varrido e não sobrou oferta. O servidor descarta itens com `active_ads` menor que 60. `page_url` e `checkout_url` são opcionais. URLs perdem o mesmo rastreio dos outros campos. Idiomas: `es`, `en`, `fr`, `de`, `it`, `pt`.
 
 ```json
 {
@@ -339,11 +375,12 @@ Chave de idioma ausente em `results`: aquele idioma não foi varrido. Lista vazi
     "results": {
       "es": [
         {
-          "library_url": "https://www.facebook.com/ads/library/?view_all_page_id=200001",
           "name": "Protocolo Quema 21",
+          "library_url": "https://www.facebook.com/ads/library/?view_all_page_id=200001",
+          "active_ads": 86,
+          "front_ticket": "€ 27",
           "page_url": "https://oferta.exemplo/es/quiz",
-          "checkout_url": "https://pay.oferta.exemplo/es/checkout",
-          "front_ticket": "€ 27"
+          "checkout_url": "https://pay.oferta.exemplo/es/checkout"
         }
       ],
       "en": [],

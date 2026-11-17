@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdsReadout } from "@/components/ads-readout";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
-import { formatListUpdated, formatTicketCompact } from "@/lib/offers/format";
+import { formatFunnel, formatListUpdated, formatTicketCompact } from "@/lib/offers/format";
 import type { OfferCard } from "@/lib/offers/types";
 
 export function OfferList({ offers }: { offers: OfferCard[] }) {
@@ -43,13 +43,13 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
                 </td>
                 <td className="px-3 py-2.5">{offer.niche ?? "—"}</td>
                 <td className="px-3 py-2.5">{offer.language_country ?? "—"}</td>
-                <td className="px-3 py-2.5 whitespace-nowrap">{offer.funnel_model ?? "—"}</td>
+                <td className="px-3 py-2.5 whitespace-nowrap">{formatFunnel(offer.funnel_model) ?? "—"}</td>
                 <td className="w-px px-2 py-2.5">
                   <TicketCell value={offer.front_ticket} />
                 </td>
                 <td className="px-3 py-2.5">
                   <span className="inline-flex flex-wrap items-center gap-1">
-                    <OportunidadeMark score={offer.opportunity_score} />
+                    <OportunidadeMark available={offer.modeling_opportunity} />
                     <OpportunityBadge score={offer.opportunity_score} />
                   </span>
                 </td>
@@ -74,7 +74,7 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
       <div className="flex items-start justify-between gap-3">
         <OfferTitle offer={offer} linked={false} />
         <span className="inline-flex flex-wrap items-center justify-end gap-1">
-          <OportunidadeMark score={offer.opportunity_score} />
+          <OportunidadeMark available={offer.modeling_opportunity} />
           <OpportunityBadge score={offer.opportunity_score} />
         </span>
       </div>
@@ -86,7 +86,7 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
       <ul className="grid gap-0.5 text-sm text-muted">
         <li>{offer.niche ?? "Nicho não informado"}</li>
         <li>{offer.language_country ?? "Idioma não informado"}</li>
-        <li>{offer.funnel_model ?? "Funil não informado"}</li>
+        <li>{formatFunnel(offer.funnel_model) ?? "Funil não informado"}</li>
         <li>
           TM <TicketCell value={offer.front_ticket} />
         </li>

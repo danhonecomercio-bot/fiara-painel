@@ -23,27 +23,21 @@ export async function getOfferDetail(slug: string) {
   }
 
   const supabase = await createClient();
+  const optional = ["score_breakdown", "modeling_check", "language_scan", "opportunity_score", "google_library_url"];
   const detailSelect = `
-        id, slug, title, niche, language_country, opportunity, opportunity_score, opportunity_notes, google_library_url,
+        id, slug, title, niche, language_country, opportunity, opportunity_score, score_breakdown, opportunity_notes, google_library_url,
         expert, promise, front_ticket, funnel_model, running_since,
-        destination_urls, checkout_url, order_bumps, upsells, modeling_notes, language_scan,
+        destination_urls, checkout_url, order_bumps, upsells, modeling_notes, language_scan, modeling_check,
         raw, status, created_at, updated_at,
         offer_libraries (page_name, library_url, active_ads),
         offer_snapshots (captured_at, total_active_ads, per_library)
       `;
-  const withoutScan = detailSelect.replace(", language_scan", "");
-  const legacySelect = withoutScan
-    .replace("opportunity_score, ", "")
-    .replace("google_library_url,\n", "");
-  const first = await supabase.from("offers").select(detailSelect).eq("slug", slug).maybeSingle();
-  const afterScan =
-    first.error && /language_scan/.test(first.error.message)
-      ? await supabase.from("offers").select(withoutScan).eq("slug", slug).maybeSingle()
-      : first;
-  const result =
-    afterScan.error && /opportunity_score|google_library_url/.test(afterScan.error.message)
-      ? await supabase.from("offers").select(legacySelect).eq("slug", slug).maybeSingle()
-      : afterScan;
+  const without = (message: string) =>
+    optional.reduce((sql, column) => (message.includes(column) ? sql.replace(new RegExp(`,\\s*${column}\\b`), "") : sql), detailSelect);
+  let result = await supabase.from("offers").select(detailSelect).eq("slug", slug).maybeSingle();
+  if (result.error && optional.some((column) => result.error?.message.includes(column))) {
+    result = await supabase.from("offers").select(without(result.error.message)).eq("slug", slug).maybeSingle();
+  }
   if (result.error) throw new Error(result.error.message);
   if (!result.data) return null;
   return mapOfferRow(result.data);

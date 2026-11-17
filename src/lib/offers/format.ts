@@ -62,6 +62,16 @@ export function normalizeScore(value: unknown) {
   return Math.round(number * 2) / 2;
 }
 
+export function formatFunnel(value: string | null | undefined) {
+  if (!value) return null;
+  return value.trim().toLowerCase() === "quiz" ? "Quiz+LP" : value;
+}
+
+export function formatUsedOn(input: string | Date) {
+  const stamp = saoPauloStamp(input);
+  return `usado em ${stamp.day}/${stamp.month}`;
+}
+
 export function formatScore(score: number) {
   return score.toLocaleString("pt-BR", {
     minimumFractionDigits: Number.isInteger(score) ? 0 : 1,

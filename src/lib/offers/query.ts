@@ -1,3 +1,4 @@
+import type { ModelingCheck } from "./schema";
 import type { OfferCard } from "./types";
 
 export const SCORE_FILTERS = [
@@ -31,8 +32,8 @@ export type OfferFilters = {
   ordem: "anuncios" | "crescimento" | "recentes";
 };
 
-export function isOpportunityScore(score: number | null | undefined) {
-  return score != null && score >= 4.5;
+export function isModelingOpportunity(check: ModelingCheck | null | undefined) {
+  return Boolean(check?.techniques.some((technique) => technique.available));
 }
 
 export function parseFilters(params: {
@@ -69,7 +70,7 @@ export function filterAndSort(cards: OfferCard[], filters: OfferFilters) {
     if (filters.oportunidade.length > 0 && !matchesScore(card.opportunity_score, filters.oportunidade)) {
       return false;
     }
-    if (filters.soOportunidades && !isOpportunityScore(card.opportunity_score)) return false;
+    if (filters.soOportunidades && !card.modeling_opportunity) return false;
     if (!query) return true;
     const haystack = [
       card.title,

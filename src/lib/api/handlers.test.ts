@@ -24,6 +24,40 @@ function authorized(body: unknown, method = "POST") {
 }
 
 describe("opportunity_score", () => {
+  it("soma o detalhamento e descarta anúncio abaixo de 60", () => {
+    const parsed = offerPatchSchema.parse({
+      score_breakdown: [
+        { criterion: "Escala", detail: "Muitos anúncios", points: 2 },
+        { criterion: "Criativo", detail: "Forte", points: 1.5 },
+      ],
+      language_scan: {
+        ran_at: "2026-11-17T18:00:00.000Z",
+        results: {
+          es: [
+            {
+              name: "Grande",
+              library_url: "https://www.facebook.com/ads/library/?id=1",
+              active_ads: 80,
+              front_ticket: "R$ 47",
+            },
+            {
+              name: "Pequena",
+              library_url: "https://www.facebook.com/ads/library/?id=2",
+              active_ads: 40,
+              front_ticket: "R$ 17",
+            },
+          ],
+        },
+      },
+    });
+    assert.equal(parsed.opportunity_score, 3.5);
+    assert.equal(parsed.language_scan?.results.es?.length, 1);
+    assert.equal(parsed.language_scan?.results.es?.[0]?.name, "Grande");
+    assert.equal(offerPatchSchema.safeParse({
+      score_breakdown: [{ criterion: "Tudo", detail: "Passou", points: 3 }, { criterion: "Mais", detail: "Passou", points: 3 }],
+    }).success, false);
+  });
+
   it("aceita meios pontos e rejeita o que não é múltiplo de 0,5", () => {
     assert.equal(offerPatchSchema.parse({ opportunity_score: 4 }).opportunity_score, 4);
     assert.equal(offerPatchSchema.parse({ opportunity_score: 3.5 }).opportunity_score, 3.5);
@@ -42,6 +76,7 @@ describe("language_scan", () => {
             {
               library_url: "https://www.facebook.com/ads/library/?id=1&utm_source=meta&fbclid=abc",
               name: "Oferta ES",
+              active_ads: 80,
               page_url: "https://oferta.exemplo/es?src=meta",
               checkout_url: "https://pay.oferta.exemplo/es?gclid=1",
               front_ticket: "€ 27",

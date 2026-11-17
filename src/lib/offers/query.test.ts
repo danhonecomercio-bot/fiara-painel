@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { filterAndSort, isOpportunityScore, parseFilters } from "./query";
+import { filterAndSort, isModelingOpportunity, parseFilters } from "./query";
 import type { OfferCard } from "./types";
 
 function card(partial: Partial<OfferCard> & Pick<OfferCard, "slug" | "title">): OfferCard {
@@ -10,6 +10,7 @@ function card(partial: Partial<OfferCard> & Pick<OfferCard, "slug" | "title">): 
     language_country: null,
     opportunity: "nao_avaliada",
     opportunity_score: null,
+    modeling_opportunity: false,
     expert: false,
     promise: null,
     front_ticket: null,
@@ -36,6 +37,7 @@ const cards = [
     language_country: "Português / Brasil",
     opportunity: "alta",
     opportunity_score: 5,
+    modeling_opportunity: true,
     total_active_ads: 546,
     prev_total_active_ads: 466,
     promise: "Perca peso",
@@ -102,11 +104,25 @@ describe("filtros", () => {
       result.map((item) => item.slug),
       ["meio"],
     );
-    assert.equal(isOpportunityScore(4.5), true);
-    assert.equal(isOpportunityScore(4), false);
+    assert.equal(
+      isModelingOpportunity({
+        checked_at: "2026-11-17T18:00:00.000Z",
+        summary: "Dá para modelar.",
+        techniques: [{ rank: 1, key: "quiz", name: "Quiz", available: true, why: "Curto.", suggestion: "Copiar a ordem." }],
+      }),
+      true,
+    );
+    assert.equal(
+      isModelingOpportunity({
+        checked_at: "2026-11-17T18:00:00.000Z",
+        summary: "Não.",
+        techniques: [{ rank: 1, key: "vsl", name: "VSL", available: false, why: "Longa.", suggestion: "" }],
+      }),
+      false,
+    );
   });
 
-  it("mostra só oportunidades com nota 4,5 ou mais", () => {
+  it("mostra só ofertas com técnica de modelagem disponível", () => {
     const result = filterAndSort(cards, parseFilters({ so_oportunidades: "1" }));
     assert.deepEqual(
       result.map((item) => item.slug),

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { formatUsedOn } from "@/lib/offers/format";
 import type { OfferAction, OfferActionName } from "@/lib/actions/types";
 
 export function OfferActions({
@@ -119,6 +120,9 @@ function ActionButton({
         {label}
       </Button>
       {status}
+      {row && (action === "baixar_top_ads" || action === "varredura_idiomas") ? (
+        <p className="text-xs text-muted">{formatUsedOn(row.created_at)}</p>
+      ) : null}
     </div>
   );
 }

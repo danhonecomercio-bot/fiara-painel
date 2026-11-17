@@ -5,7 +5,8 @@ import { AdsReadout } from "@/components/ads-readout";
 import { OfferActions } from "@/components/offer-actions";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
 import type { OfferAction } from "@/lib/actions/types";
-import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatScore, formatUpdated, stripTracking } from "@/lib/offers/format";
+import { formatBumpPrice, formatCalendarDate, formatFunnel, formatListUpdated, formatScanStamp, formatScore, formatUpdated, stripTracking } from "@/lib/offers/format";
+import { isModelingOpportunity } from "@/lib/offers/query";
 import { SCAN_LANGUAGES } from "@/lib/offers/schema";
 import type { OfferDetail } from "@/lib/offers/types";
 
@@ -31,13 +32,14 @@ export function OfferDetailView({
         <Link href="/" className="text-sm font-semibold text-gold hover:underline">
           Voltar às ofertas
         </Link>
+        <h1 className="font-display text-3xl leading-tight text-gold sm:text-4xl">{offer.title}</h1>
         <div className="flex flex-wrap items-center gap-2">
           {offer.raw?.example === true ? (
             <span className="rounded border border-gold/60 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-gold">
               exemplo
             </span>
           ) : null}
-          <OportunidadeMark score={offer.opportunity_score} />
+          <OportunidadeMark available={isModelingOpportunity(offer.modeling_check)} />
           <OpportunityBadge score={offer.opportunity_score} />
           {offer.status === "paused" ? (
             <span className="rounded border border-white/30 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -47,7 +49,8 @@ export function OfferDetailView({
             <span className="text-xs text-muted">Ativa</span>
           )}
         </div>
-        <h1 className="font-display text-3xl leading-tight text-gold sm:text-4xl">{offer.title}</h1>
+        <ScoreBreakdown breakdown={offer.score_breakdown} total={offer.opportunity_score} />
+        <ModelingCheckSection check={offer.modeling_check} />
         <LibraryLinks offer={offer} />
         <OfferActions
           slug={offer.slug}
@@ -78,14 +81,12 @@ export function OfferDetailView({
         <dl>
           <Field label="Nicho">{text(offer.niche)}</Field>
           <Field label="Idioma/país">{text(offer.language_country)}</Field>
-          <Field label="Oportunidade">
-            {offer.opportunity_score == null ? "Não avaliada" : `Nota ${formatScore(offer.opportunity_score)}`}
-          </Field>
+          <Field label="Oportunidade">{isModelingOpportunity(offer.modeling_check) ? "Sim" : "Não"}</Field>
           <Field label="Notas de oportunidade">{text(offer.opportunity_notes)}</Field>
           <Field label="Expert">{offer.expert ? "Sim" : "Não"}</Field>
           <Field label="Promessa">{text(offer.promise)}</Field>
           <Field label="TM do Front">{text(offer.front_ticket)}</Field>
-          <Field label="Funil">{text(offer.funnel_model)}</Field>
+          <Field label="Funil">{text(formatFunnel(offer.funnel_model))}</Field>
           <Field label="No ar desde">
             {offer.running_since ? formatCalendarDate(offer.running_since) : "—"}
           </Field>
@@ -140,8 +141,6 @@ export function OfferDetailView({
         </dl>
       </div>
 
-      <LanguageScanSection offer={offer} />
-
       <section className="grid gap-3">
         <h2 className="font-subtitle text-2xl text-gold">Histórico de anúncios ativos</h2>
         <AdsChart snapshots={offer.snapshots} />
@@ -160,6 +159,8 @@ export function OfferDetailView({
           </pre>
         </details>
       </section>
+
+      <LanguageScanSection offer={offer} />
     </article>
   );
 }
@@ -201,6 +202,79 @@ const SCAN_TITLE = {
   pt: "Português ofertas encontradas",
 } as const;
 
+function ScoreBreakdown({
+  breakdown,
+  total,
+}: {
+  breakdown: OfferDetail["score_breakdown"];
+  total: number | null;
+}) {
+  if (!breakdown || breakdown.length === 0) return null;
+  return (
+    <table className="w-full max-w-xl border-collapse text-sm">
+      <thead className="text-left text-xs uppercase tracking-wide text-gold">
+        <tr>
+          <th className="py-1 pr-3 font-semibold">Critério</th>
+          <th className="py-1 pr-3 font-semibold">Detalhe</th>
+          <th className="py-1 font-semibold">Pontos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {breakdown.map((item, index) => (
+          <tr key={`${item.criterion}-${index}`} className="border-t border-line">
+            <td className="py-1 pr-3">{item.criterion}</td>
+            <td className="py-1 pr-3 text-muted">{item.detail || "—"}</td>
+            <td className="py-1 tabular-nums">{formatScore(item.points)}</td>
+          </tr>
+        ))}
+        <tr className="border-t border-line font-semibold">
+          <td className="py-1 pr-3" colSpan={2}>
+            Total
+          </td>
+          <td className="py-1 tabular-nums">{total == null ? "—" : formatScore(total)}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function ModelingCheckSection({ check }: { check: OfferDetail["modeling_check"] }) {
+  if (!check) return null;
+  const techniques = [...check.techniques].sort((a, b) => a.rank - b.rank);
+  const available = techniques.filter((item) => item.available);
+  const unavailable = techniques.filter((item) => !item.available);
+  return (
+    <section className="grid gap-3">
+      <div className="grid gap-1">
+        <h2 className="font-subtitle text-2xl text-gold">Verificação de modelagem</h2>
+        <p className="text-sm text-muted">{formatListUpdated(check.checked_at)}</p>
+      </div>
+      {check.summary ? <p className="text-sm leading-6">{check.summary}</p> : null}
+      <ul className="grid gap-2">
+        {available.map((item) => (
+          <li key={item.key} className="grid gap-1 rounded-md border border-gold bg-panel px-3 py-2 text-sm">
+            <span className="font-semibold text-gold">{item.name}</span>
+            {item.why ? <span>{item.why}</span> : null}
+            {item.suggestion ? <span className="text-muted">{item.suggestion}</span> : null}
+          </li>
+        ))}
+      </ul>
+      {unavailable.length > 0 ? (
+        <details className="rounded-md border border-line px-3 py-2 text-sm text-muted">
+          <summary className="cursor-pointer font-semibold">Indisponíveis ({unavailable.length})</summary>
+          <ul className="mt-2 grid gap-2">
+            {unavailable.map((item) => (
+              <li key={item.key}>
+                <span className="text-white">{item.name}.</span> {item.why}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+    </section>
+  );
+}
+
 function LanguageScanSection({ offer }: { offer: OfferDetail }) {
   const scan = offer.language_scan;
   if (!scan) return null;
@@ -221,13 +295,12 @@ function LanguageScanSection({ offer }: { offer: OfferDetail }) {
               <ul className="grid gap-3">
                 {items.map((item, index) => (
                   <li key={`${item.library_url}-${index}`} className="grid gap-1 rounded-md border border-line bg-panel px-3 py-2 text-sm">
+                    <span className="font-semibold">{item.name}</span>
                     <span>
                       FB Library <ExternalLink href={item.library_url} />
                     </span>
-                    <span>{item.name}</span>
-                    <ExternalLink href={item.page_url} />
-                    <ExternalLink href={item.checkout_url} />
-                    <span>TM do Front: {item.front_ticket}</span>
+                    <span className="tabular-nums">{item.active_ads} anúncios ativos</span>
+                    <span>TM do Front: {item.front_ticket || "—"}</span>
                   </li>
                 ))}
               </ul>

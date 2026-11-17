@@ -90,6 +90,7 @@ export function toOfferJson(offer: OfferDetail) {
     language_country: offer.language_country,
     opportunity: offer.opportunity,
     opportunity_score: offer.opportunity_score,
+    score_breakdown: offer.score_breakdown,
     opportunity_notes: offer.opportunity_notes,
     google_library_url: offer.google_library_url,
     expert: offer.expert,
@@ -103,6 +104,7 @@ export function toOfferJson(offer: OfferDetail) {
     upsells: offer.upsells,
     modeling_notes: offer.modeling_notes,
     language_scan: offer.language_scan,
+    modeling_check: offer.modeling_check,
     raw: offer.raw,
     status: offer.status,
     created_at: offer.created_at,
@@ -166,6 +168,17 @@ export async function postOffers(request: Request, repo: OfferRepository, apiKey
           {
             error: "nao_configurado",
             message: "A coluna language_scan ainda não existe. Rode a migração nova.",
+            failed_slug: offer.slug,
+            results,
+          },
+          503,
+        );
+      }
+      if (missingNewColumn(message) || unknownFunnel(message)) {
+        return json(
+          {
+            error: "nao_configurado",
+            message: "O banco ainda não tem score_breakdown, modeling_check ou funil livre. Rode a migração nova.",
             failed_slug: offer.slug,
             results,
           },
@@ -239,6 +252,15 @@ export async function patchOfferBySlug(
         {
           error: "nao_configurado",
           message: "A coluna language_scan ainda não existe. Rode a migração nova.",
+        },
+        503,
+      );
+    }
+    if (missingNewColumn(message) || unknownFunnel(message)) {
+      return json(
+        {
+          error: "nao_configurado",
+          message: "O banco ainda não tem score_breakdown, modeling_check ou funil livre. Rode a migração nova.",
         },
         503,
       );
@@ -354,7 +376,7 @@ async function fireAuto(
 }
 
 async function maybeVarredura(offer: OfferDetail, score: number | null | undefined) {
-  if (score == null || score < 4.5) return;
+  if (score == null || score < 4) return;
   const config = webhookConfig("varredura_idiomas");
   if (!config) {
     console.info(autoSkipMessage("varredura_idiomas", offer.slug));
@@ -376,6 +398,14 @@ async function maybeVarredura(offer: OfferDetail, score: number | null | undefin
     const message = error instanceof Error ? error.message : "falha";
     console.error(`[fiara] auto varredura_idiomas falhou para ${offer.slug}: ${message}`);
   }
+}
+
+function missingNewColumn(message: string) {
+  return /score_breakdown|modeling_check/.test(message);
+}
+
+function unknownFunnel(message: string) {
+  return /funnel_model|invalid input value for enum/i.test(message);
 }
 
 function halfStepColumn(message: string, score: number | null | undefined) {
