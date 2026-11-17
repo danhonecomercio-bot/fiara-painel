@@ -27,6 +27,11 @@ export function createMemoryActionStore(seed: OfferAction[] = []): ActionStore {
       }
       return [...latest.values()].map((row) => ({ ...row }));
     },
+    async listForOffer(offerId) {
+      return [...rows.values()]
+        .filter((row) => row.offer_id === offerId)
+        .map((row) => ({ ...row }));
+    },
   };
 }
 

@@ -9,11 +9,13 @@ export function OfferActions({
   initial,
   topadsReady,
   modelarReady,
+  varreduraReady,
 }: {
   slug: string;
   initial: OfferAction[];
   topadsReady: boolean;
   modelarReady: boolean;
+  varreduraReady: boolean;
 }) {
   const [actions, setActions] = useState(initial);
   const [busy, setBusy] = useState<OfferActionName | null>(null);
@@ -58,7 +60,7 @@ export function OfferActions({
 
   return (
     <div className="grid gap-2">
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <ActionButton
           label="Baixar top ads"
           action="baixar_top_ads"
@@ -66,6 +68,15 @@ export function OfferActions({
           disabledHint="não configurado"
           row={actions.find((item) => item.action === "baixar_top_ads") ?? null}
           busy={busy === "baixar_top_ads"}
+          onRun={run}
+        />
+        <ActionButton
+          label="Varredura em idiomas"
+          action="varredura_idiomas"
+          ready={varreduraReady}
+          disabledHint="não configurado"
+          row={actions.find((item) => item.action === "varredura_idiomas") ?? null}
+          busy={busy === "varredura_idiomas"}
           onRun={run}
         />
         <ActionButton
@@ -78,6 +89,7 @@ export function OfferActions({
           onRun={run}
         />
       </div>
+      <DissecarStatus row={actions.find((item) => item.action === "dissecar") ?? null} />
       {notice ? <p className="text-sm text-danger">{notice}</p> : null}
     </div>
   );
@@ -109,6 +121,27 @@ function ActionButton({
       {status}
     </div>
   );
+}
+
+function DissecarStatus({ row }: { row: OfferAction | null }) {
+  if (!row) return null;
+  if (row.status === "pending" || row.status === "sent") {
+    return <p className="text-xs text-gold">Dissecando…</p>;
+  }
+  if (row.status === "failed") return <p className="text-xs text-danger">Falhou</p>;
+  if (row.result_url) {
+    return (
+      <a
+        href={row.result_url}
+        target="_blank"
+        rel="noreferrer"
+        className="break-all text-xs text-gold underline decoration-gold/40 underline-offset-2"
+      >
+        {row.result_url}
+      </a>
+    );
+  }
+  return <p className="text-xs text-gold">Dissecação concluída</p>;
 }
 
 function statusLine(row: OfferAction | null, ready: boolean, disabledHint: string, busy: boolean) {

@@ -3,9 +3,10 @@ import type { ReactNode } from "react";
 import { AdsChart } from "@/components/ads-chart";
 import { AdsReadout } from "@/components/ads-readout";
 import { OfferActions } from "@/components/offer-actions";
-import { OpportunityBadge } from "@/components/opportunity-badge";
+import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
 import type { OfferAction } from "@/lib/actions/types";
-import { formatBumpPrice, formatCalendarDate, formatUpdated, heatLabel, heatPrefix, stripTracking } from "@/lib/offers/format";
+import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatUpdated, heatLabel, heatPrefix, stripTracking } from "@/lib/offers/format";
+import { SCAN_LANGUAGES } from "@/lib/offers/schema";
 import type { OfferDetail } from "@/lib/offers/types";
 
 export function OfferDetailView({
@@ -13,11 +14,13 @@ export function OfferDetailView({
   actions,
   topadsReady,
   modelarReady,
+  varreduraReady,
 }: {
   offer: OfferDetail;
   actions: OfferAction[];
   topadsReady: boolean;
   modelarReady: boolean;
+  varreduraReady: boolean;
 }) {
   const latest = offer.snapshots[0] ?? null;
   const previous = offer.snapshots[1] ?? null;
@@ -36,6 +39,7 @@ export function OfferDetailView({
               exemplo
             </span>
           ) : null}
+          <OportunidadeMark score={offer.opportunity_score} />
           <OpportunityBadge score={offer.opportunity_score} />
           {offer.status === "paused" ? (
             <span className="rounded border border-white/30 px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
@@ -56,6 +60,7 @@ export function OfferDetailView({
           initial={actions}
           topadsReady={topadsReady}
           modelarReady={modelarReady}
+          varreduraReady={varreduraReady}
         />
         <p className="text-sm text-muted">
           {latest ? formatUpdated(latest.captured_at) : "sem leitura"} · slug {offer.slug}
@@ -141,6 +146,8 @@ export function OfferDetailView({
         </dl>
       </div>
 
+      <LanguageScanSection offer={offer} />
+
       <section className="grid gap-3">
         <h2 className="font-subtitle text-2xl text-gold">Bibliotecas</h2>
         {offer.libraries.length === 0 ? (
@@ -207,6 +214,53 @@ function LineList<T extends string>({
         <li key={`${item}-${index}`}>{render(item)}</li>
       ))}
     </ul>
+  );
+}
+
+const SCAN_TITLE = {
+  es: "Espanhol ofertas encontradas",
+  en: "Inglês ofertas encontradas",
+  fr: "Francês ofertas encontradas",
+  de: "Alemão ofertas encontradas",
+  it: "Italiano ofertas encontradas",
+  pt: "Português ofertas encontradas",
+} as const;
+
+function LanguageScanSection({ offer }: { offer: OfferDetail }) {
+  const scan = offer.language_scan;
+  if (!scan) return null;
+  return (
+    <section className="grid gap-4">
+      <div className="grid gap-1">
+        <h2 className="font-subtitle text-2xl text-gold">Varredura em idiomas</h2>
+        <p className="text-sm text-muted">{formatScanStamp(scan.ran_at)}</p>
+      </div>
+      {SCAN_LANGUAGES.filter((lang) => lang in scan.results).map((lang) => {
+        const items = scan.results[lang] ?? [];
+        return (
+          <div key={lang} className="grid gap-2">
+            <h3 className="font-subtitle text-lg text-gold">{SCAN_TITLE[lang]}</h3>
+            {items.length === 0 ? (
+              <p className="text-sm">Nenhuma encontrada</p>
+            ) : (
+              <ul className="grid gap-3">
+                {items.map((item, index) => (
+                  <li key={`${item.library_url}-${index}`} className="grid gap-1 rounded-md border border-line bg-panel px-3 py-2 text-sm">
+                    <span>
+                      FB Library <ExternalLink href={item.library_url} />
+                    </span>
+                    <span>{item.name}</span>
+                    <ExternalLink href={item.page_url} />
+                    <ExternalLink href={item.checkout_url} />
+                    <span>TM do Front: {item.front_ticket}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 }
 

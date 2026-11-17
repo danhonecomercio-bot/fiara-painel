@@ -1,6 +1,47 @@
 import { z } from "zod";
 import { stripTracking } from "./format";
 
+export const SCAN_LANGUAGES = ["es", "en", "fr", "de", "it", "pt"] as const;
+
+const trackedUrl = (label: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `Informe ${label}.`)
+    .max(2000)
+    .transform(stripTracking)
+    .refine((value) => isHttpUrl(value), `${label} precisa ser uma URL http(s).`);
+
+const languageScanItemSchema = z
+  .object({
+    library_url: trackedUrl("library_url"),
+    name: z.string().trim().min(1, "Informe o nome da oferta encontrada.").max(300),
+    page_url: trackedUrl("page_url"),
+    checkout_url: trackedUrl("checkout_url"),
+    front_ticket: z.string().trim().min(1, "Informe o TM do Front.").max(200),
+  })
+  .strict();
+
+const languageScanResults = z
+  .object({
+    es: z.array(languageScanItemSchema).max(40).optional(),
+    en: z.array(languageScanItemSchema).max(40).optional(),
+    fr: z.array(languageScanItemSchema).max(40).optional(),
+    de: z.array(languageScanItemSchema).max(40).optional(),
+    it: z.array(languageScanItemSchema).max(40).optional(),
+    pt: z.array(languageScanItemSchema).max(40).optional(),
+  })
+  .strict();
+
+const languageScanSchema = z
+  .object({
+    ran_at: z.string().refine((value) => !Number.isNaN(Date.parse(value)), "ran_at inválido."),
+    results: languageScanResults,
+  })
+  .strict()
+  .nullable()
+  .optional();
+
 export const OPPORTUNITIES = [
   "alta",
   "media",
@@ -127,6 +168,7 @@ const offerFields = {
   modeling_notes: optionalText(8000),
   raw: z.record(z.unknown()).nullable().optional(),
   status: z.enum(STATUSES).optional(),
+  language_scan: languageScanSchema,
 };
 
 export const minedOfferSchema = z
@@ -187,6 +229,8 @@ export type OfferPatch = z.infer<typeof offerPatchSchema>;
 export type Opportunity = (typeof OPPORTUNITIES)[number];
 export type FunnelModel = (typeof FUNNELS)[number];
 export type OfferStatus = (typeof STATUSES)[number];
+export type LanguageScanItem = z.infer<typeof languageScanItemSchema>;
+export type LanguageScan = NonNullable<z.infer<typeof languageScanSchema>>;
 
 export function normalizePostBody(value: unknown) {
   if (Array.isArray(value)) return { offers: value };

@@ -1,6 +1,7 @@
 import type {
   FunnelModel,
   Opportunity,
+  LanguageScan,
   OrderBump,
   OfferStatus,
   Upsell,
@@ -38,6 +39,7 @@ export type OfferDetail = {
   order_bumps: OrderBump[];
   upsells: Upsell[];
   modeling_notes: string | null;
+  language_scan: LanguageScan | null;
   raw: Record<string, unknown> | null;
   status: OfferStatus;
   created_at: string;

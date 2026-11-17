@@ -91,6 +91,14 @@ describe("filtros", () => {
     );
   });
 
+  it("mostra só oportunidades com nota 4,5 ou mais", () => {
+    const result = filterAndSort(cards, parseFilters({ so_oportunidades: "1" }));
+    assert.deepEqual(
+      result.map((item) => item.slug),
+      ["a"],
+    );
+  });
+
   it("filtra nicho e idioma juntos", () => {
     const result = filterAndSort(
       cards,

@@ -4,6 +4,7 @@ import {
   adsReadout,
   formatBumpPrice,
   formatCalendarDate,
+  formatScanStamp,
   formatSince,
   formatUpdated,
   heatPrefix,
@@ -36,6 +37,7 @@ describe("leitura de anúncios", () => {
 
   it("formata data de calendário sem deslocar o dia", () => {
     assert.equal(formatCalendarDate("2026-06-03"), "03/06/2026");
+    assert.equal(formatScanStamp("2026-11-16T10:00:00.000Z"), "varredura em 16/11 - 7h");
   });
 
   it("junta o preço do order bump numa linha e tira o rastreio da URL", () => {

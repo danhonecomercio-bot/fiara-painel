@@ -51,5 +51,14 @@ export function createSupabaseActionStore(client: SupabaseClient): ActionStore {
       }
       return [...latest.values()];
     },
+    async listForOffer(offerId) {
+      const { data, error } = await client
+        .from("offer_actions")
+        .select("*")
+        .eq("offer_id", offerId)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((row) => asAction(row));
+    },
   };
 }

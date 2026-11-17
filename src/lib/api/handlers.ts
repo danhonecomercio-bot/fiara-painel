@@ -1,4 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
+import { autoSkipMessage, shouldAutoVarredura } from "../actions/auto";
+import { requestOfferAction } from "../actions/request";
+import { webhookConfig } from "../actions/webhook";
 import type { OfferRepository } from "../data/repository";
 import {
   normalizePostBody,
@@ -99,6 +102,7 @@ export function toOfferJson(offer: OfferDetail) {
     order_bumps: offer.order_bumps,
     upsells: offer.upsells,
     modeling_notes: offer.modeling_notes,
+    language_scan: offer.language_scan,
     raw: offer.raw,
     status: offer.status,
     created_at: offer.created_at,
@@ -145,9 +149,29 @@ export async function postOffers(request: Request, repo: OfferRepository, apiKey
   const results = [];
   for (const offer of parsed.data.offers) {
     try {
-      results.push(await repo.upsertMinedOffer(offer));
+      const saved = await repo.upsertMinedOffer(offer);
+      results.push(saved);
+      if (saved.created) {
+        await fireAuto("dissecar", {
+          id: saved.id,
+          slug: offer.slug,
+          title: offer.title,
+          libraries: offer.libraries,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Falha ao gravar a oferta.";
+      if (/language_scan/.test(message)) {
+        return json(
+          {
+            error: "nao_configurado",
+            message: "A coluna language_scan ainda não existe. Rode a migração nova.",
+            failed_slug: offer.slug,
+            results,
+          },
+          503,
+        );
+      }
       return json(
         {
           error: "falha_parcial",
@@ -195,9 +219,19 @@ export async function patchOfferBySlug(
         404,
       );
     }
+    await maybeVarredura(updated, parsed.data.opportunity_score);
     return json({ ok: true, offer: toOfferJson(updated) });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao atualizar a oferta.";
+    if (/language_scan/.test(message)) {
+      return json(
+        {
+          error: "nao_configurado",
+          message: "A coluna language_scan ainda não existe. Rode a migração nova.",
+        },
+        503,
+      );
+    }
     return json({ error: "falha_interna", message }, 500);
   }
 }
@@ -251,6 +285,55 @@ export async function getOffers(request: Request, repo: OfferRepository, apiKey:
   } catch (error) {
     const message = error instanceof Error ? error.message : "Falha ao listar ofertas.";
     return json({ error: "falha_interna", message }, 500);
+  }
+}
+
+async function fireAuto(
+  action: "dissecar" | "varredura_idiomas",
+  offer: Pick<OfferDetail, "id" | "slug" | "title" | "libraries">,
+) {
+  const config = webhookConfig(action);
+  if (!config) {
+    console.info(autoSkipMessage(action, offer.slug));
+    return;
+  }
+  try {
+    const { getActionStore } = await import("../actions/store");
+    await requestOfferAction({
+      offer,
+      action,
+      requestedBy: "sistema",
+      store: getActionStore(),
+      config,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "falha";
+    console.error(`[fiara] auto ${action} falhou para ${offer.slug}: ${message}`);
+  }
+}
+
+async function maybeVarredura(offer: OfferDetail, score: number | null | undefined) {
+  if (score == null || score < 4.5) return;
+  const config = webhookConfig("varredura_idiomas");
+  if (!config) {
+    console.info(autoSkipMessage("varredura_idiomas", offer.slug));
+    return;
+  }
+  try {
+    const { getActionStore } = await import("../actions/store");
+    const store = getActionStore();
+    const existing = await store.listForOffer(offer.id);
+    if (!shouldAutoVarredura(score, existing)) return;
+    await requestOfferAction({
+      offer,
+      action: "varredura_idiomas",
+      requestedBy: "sistema",
+      store,
+      config,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "falha";
+    console.error(`[fiara] auto varredura_idiomas falhou para ${offer.slug}: ${message}`);
   }
 }
 

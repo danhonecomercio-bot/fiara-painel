@@ -27,14 +27,27 @@ export function OfferFilters({
   const selectedNicho = searchParams.getAll("nicho");
   const selectedIdioma = searchParams.getAll("idioma");
   const selectedOportunidade = searchParams.getAll("oportunidade");
+  const soOportunidades = searchParams.get("so_oportunidades") === "1";
   const ordem = searchParams.get("ordem") ?? "anuncios";
   const q = searchParams.get("q") ?? "";
   const active =
-    selectedNicho.length + selectedIdioma.length + selectedOportunidade.length + (q ? 1 : 0) > 0;
+    selectedNicho.length +
+      selectedIdioma.length +
+      selectedOportunidade.length +
+      (soOportunidades ? 1 : 0) +
+      (q ? 1 : 0) >
+    0;
 
   function push(next: URLSearchParams) {
     const query = next.toString();
     router.push(query ? `/?${query}` : "/", { scroll: false });
+  }
+
+  function toggleOportunidades() {
+    const next = new URLSearchParams(searchParams.toString());
+    if (soOportunidades) next.delete("so_oportunidades");
+    else next.set("so_oportunidades", "1");
+    push(next);
   }
 
   function setOrdem(value: string) {
@@ -94,6 +107,10 @@ export function OfferFilters({
           selected={selectedOportunidade}
           labels={SCORE_LABEL}
         />
+        <label className="flex h-9 items-center gap-2 rounded-md border border-gold/50 bg-panel px-3 text-sm text-white">
+          <input type="checkbox" checked={soOportunidades} onChange={toggleOportunidades} />
+          Só oportunidades (4,5+)
+        </label>
         <label className="grid gap-1 text-xs font-semibold uppercase tracking-wide text-gold lg:ml-auto">
           Ordenar
           <select

@@ -21,6 +21,7 @@ const OFFER_COLUMNS = [
   "order_bumps",
   "upsells",
   "modeling_notes",
+  "language_scan",
   "raw",
   "status",
 ] as const;
@@ -28,11 +29,17 @@ const OFFER_COLUMNS = [
 const OFFER_SELECT = `
   id, slug, title, niche, language_country, opportunity, opportunity_score, opportunity_notes, google_library_url,
   expert, promise, front_ticket, funnel_model, running_since,
-  destination_urls, checkout_url, order_bumps, upsells, modeling_notes,
+  destination_urls, checkout_url, order_bumps, upsells, modeling_notes, language_scan,
   raw, status, created_at, updated_at,
   offer_libraries (page_name, library_url, active_ads),
   offer_snapshots (captured_at, total_active_ads, per_library)
 `;
+
+const OFFER_SELECT_LEGACY = OFFER_SELECT.replace("modeling_notes, language_scan,", "modeling_notes,");
+
+function missingScan(message: string) {
+  return /language_scan/.test(message);
+}
 
 export class SupabaseOfferRepository implements OfferRepository {
   constructor(private client: SupabaseClient) {}
@@ -108,15 +115,19 @@ export class SupabaseOfferRepository implements OfferRepository {
       if (patch[key] !== undefined) payload[key] = patch[key];
     }
 
-    const { data, error } = await this.client
+    const first = await this.client
       .from("offers")
       .update(payload)
       .eq("slug", slug)
       .select(OFFER_SELECT)
       .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) return null;
-    const detail = mapOfferRow(data);
+    const row =
+      first.error && missingScan(first.error.message) && payload.language_scan === undefined
+        ? await this.client.from("offers").update(payload).eq("slug", slug).select(OFFER_SELECT_LEGACY).maybeSingle()
+        : first;
+    if (row.error) throw new Error(row.error.message);
+    if (!row.data) return null;
+    const detail = mapOfferRow(row.data);
     detail.snapshots = detail.snapshots.slice(0, 30);
     return detail;
   }
@@ -132,9 +143,24 @@ export class SupabaseOfferRepository implements OfferRepository {
 
     if (query.since) request = request.gte("updated_at", new Date(query.since).toISOString());
 
-    const { data, error } = await request;
-    if (error) throw new Error(error.message);
-    return (data ?? []).map((row) => {
+    const first = await request;
+    let rows: unknown[] = first.data ?? [];
+    let failure = first.error?.message ?? null;
+    if (first.error && missingScan(first.error.message)) {
+      let legacy = this.client
+        .from("offers")
+        .select(OFFER_SELECT_LEGACY)
+        .order("updated_at", { ascending: false })
+        .order("captured_at", { referencedTable: "offer_snapshots", ascending: false })
+        .limit(30, { referencedTable: "offer_snapshots" })
+        .range(query.offset, query.offset + query.limit - 1);
+      if (query.since) legacy = legacy.gte("updated_at", new Date(query.since).toISOString());
+      const retry = await legacy;
+      rows = retry.data ?? [];
+      failure = retry.error?.message ?? null;
+    }
+    if (failure) throw new Error(failure);
+    return rows.map((row) => {
       const detail = mapOfferRow(row);
       detail.snapshots = detail.snapshots.slice(0, 30);
       return detail;

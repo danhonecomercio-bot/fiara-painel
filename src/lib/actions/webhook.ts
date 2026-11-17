@@ -4,13 +4,22 @@ import type { OfferActionName } from "./types";
 
 export type WebhookConfig = { url: string; key: string };
 
-export function webhookConfig(action: OfferActionName): WebhookConfig | null {
-  const urlName = action === "baixar_top_ads" ? "TOPADS_WEBHOOK_URL" : "MODELADOR_WEBHOOK_URL";
-  const keyName = action === "baixar_top_ads" ? "TOPADS_WEBHOOK_KEY" : "MODELADOR_WEBHOOK_KEY";
+function pair(urlName: string, keyName: string): WebhookConfig | null {
   const url = process.env[urlName]?.trim();
   const key = process.env[keyName]?.trim();
   if (!url || !key) return null;
   return { url, key };
+}
+
+export function webhookConfig(action: OfferActionName): WebhookConfig | null {
+  if (action === "baixar_top_ads" || action === "dissecar") {
+    return (
+      pair("DISSECADOR_WEBHOOK_URL", "DISSECADOR_WEBHOOK_KEY") ??
+      pair("TOPADS_WEBHOOK_URL", "TOPADS_WEBHOOK_KEY")
+    );
+  }
+  if (action === "varredura_idiomas") return pair("MINERADOR_WEBHOOK_URL", "MINERADOR_WEBHOOK_KEY");
+  return pair("MODELADOR_WEBHOOK_URL", "MODELADOR_WEBHOOK_KEY");
 }
 
 export function webhookBody(input: {

@@ -26,6 +26,7 @@ const OPTIONAL_KEYS = [
   "order_bumps",
   "upsells",
   "modeling_notes",
+  "language_scan",
   "raw",
   "status",
 ] as const;
@@ -51,6 +52,7 @@ function blankOffer(id: string, slug: string, title: string, now: string): Offer
     order_bumps: [],
     upsells: [],
     modeling_notes: null,
+    language_scan: null,
     raw: {},
     status: "active",
     created_at: now,
@@ -185,6 +187,7 @@ function cloneDetail(offer: OfferDetail): OfferDetail {
     destination_urls: [...offer.destination_urls],
     order_bumps: offer.order_bumps.map((bump) => ({ ...bump })),
     upsells: offer.upsells.map((upsell) => ({ ...upsell })),
+    language_scan: offer.language_scan ? structuredClone(offer.language_scan) : null,
     raw: offer.raw ? { ...offer.raw } : null,
     libraries: offer.libraries.map((library) => ({ ...library })),
     snapshots: offer.snapshots.map((snapshot) => ({

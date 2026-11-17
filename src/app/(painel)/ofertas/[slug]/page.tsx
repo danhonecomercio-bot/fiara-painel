@@ -19,6 +19,7 @@ export default async function OfferPage({ params }: { params: Promise<{ slug: st
       actions={actions}
       topadsReady={webhookConfig("baixar_top_ads") != null}
       modelarReady={webhookConfig("modelar") != null}
+      varreduraReady={webhookConfig("varredura_idiomas") != null}
     />
   );
 }

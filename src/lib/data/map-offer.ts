@@ -33,6 +33,7 @@ export function mapOfferRow(row: unknown): OfferDetail {
     order_bumps: asObjectArray(record.order_bumps),
     upsells: asObjectArray(record.upsells),
     modeling_notes: asNullableString(record.modeling_notes),
+    language_scan: asLanguageScan(record.language_scan),
     raw,
     status: asStatus(record.status),
     created_at: asString(record.created_at),
@@ -142,6 +143,33 @@ function scoreFromRow(record: Record<string, unknown>) {
   if (opportunity === "baixa") return 1;
   if (opportunity === "nenhuma") return 0;
   return null;
+}
+
+const SCAN_LANGS = ["es", "en", "fr", "de", "it", "pt"] as const;
+
+function asLanguageScan(value: unknown) {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.ran_at !== "string" || Number.isNaN(Date.parse(record.ran_at))) return null;
+  if (!record.results || typeof record.results !== "object") return null;
+  const source = record.results as Record<string, unknown>;
+  const results: Record<string, { library_url: string; name: string; page_url: string; checkout_url: string; front_ticket: string }[]> = {};
+  for (const lang of SCAN_LANGS) {
+    if (!(lang in source)) continue;
+    const items = source[lang];
+    if (!Array.isArray(items)) return null;
+    results[lang] = items.map((item) => {
+      const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+      return {
+        library_url: asString(row.library_url),
+        name: asString(row.name),
+        page_url: asString(row.page_url),
+        checkout_url: asString(row.checkout_url),
+        front_ticket: asString(row.front_ticket),
+      };
+    });
+  }
+  return { ran_at: record.ran_at, results };
 }
 
 function asScore(value: unknown) {

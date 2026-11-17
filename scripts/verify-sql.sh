@@ -9,6 +9,7 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -c "create database ${db};"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261116140645_create_offer_swipe_file.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/seed.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261116183000_opportunity_score_google_library_actions.sql"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261117020000_language_scan_and_actions.sql"
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" <<'SQL'
 set role authenticated;

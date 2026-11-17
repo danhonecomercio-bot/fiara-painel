@@ -135,7 +135,8 @@ curl -sS -X POST "$APP_URL/api/offers" \
 | `libraries` | Obrigatório. Pelo menos uma biblioteca da Meta. Cada `library_url` é http(s) e não pode repetir no mesmo payload. |
 | `google_library_url` | Opcional. URL http(s) do Google Ads Transparency Center. |
 | `opportunity` | Enum antigo, ainda aceito: `alta`, `media`, `baixa`, `nenhuma`, `nao_avaliada`. O painel não mostra mais esse valor. |
-| `opportunity_score` | Inteiro de 0 a 5, ou `null` para “não avaliada”. |
+| `opportunity_score` | Inteiro de 0 a 5, ou `null` para “não avaliada”. Nota `>= 4,5` (na prática, 5) marca a oferta como Oportunidade. |
+| `language_scan` | Opcional. Objeto `{ ran_at, results }` descrito abaixo. `null` apaga. |
 | `funnel_model` | `Quiz`, `LP`, `Quiz+LP`, `Quiz+VSL`, `VSL` ou `null`. |
 | `status` | `active` ou `paused`. |
 | `running_since` | `YYYY-MM-DD` ou `null`. |
@@ -262,12 +263,13 @@ Snapshots vêm do mais novo para o mais antigo, no máximo 30.
 
 Os botões **Baixar top ads** e **Modelar** não chamam o webhook pelo navegador. O servidor do painel faz um único `POST`, com timeout de 8 segundos, e grava o pedido em `offer_actions`.
 
-| Botão | `action` | Variáveis |
+| Botão ou automático | `action` | Variáveis |
 | --- | --- | --- |
-| Baixar top ads | `baixar_top_ads` | `TOPADS_WEBHOOK_URL` e `TOPADS_WEBHOOK_KEY` |
+| Baixar top ads e dissecar (oferta nova) | `baixar_top_ads`, `dissecar` | `DISSECADOR_WEBHOOK_URL` e `DISSECADOR_WEBHOOK_KEY`. Se esse par faltar, vale `TOPADS_WEBHOOK_URL` e `TOPADS_WEBHOOK_KEY`. |
+| Varredura em idiomas | `varredura_idiomas` | `MINERADOR_WEBHOOK_URL` e `MINERADOR_WEBHOOK_KEY` |
 | Modelar | `modelar` | `MODELADOR_WEBHOOK_URL` e `MODELADOR_WEBHOOK_KEY` |
 
-Sem o par de variáveis, o botão fica desabilitado: “não configurado” no de top ads e “em breve” no de modelar.
+Sem o par de variáveis, o botão fica desabilitado: “não configurado” em top ads e na varredura, “em breve” em modelar. O disparo automático (dissecar na oferta nova, varredura quando a nota chega a 4,5 ou mais) só registra no log e não chama o webhook.
 
 O painel manda:
 
@@ -293,7 +295,37 @@ X-Automation-Key: <WEBHOOK_KEY>
 }
 ```
 
-A linha em `offer_actions` é criada antes do POST. `action_id` é o `id` dessa linha e é o mesmo valor do `PATCH /api/offer-actions/:id`. `funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem está logado no painel. O corpo de **Modelar** é o mesmo, com `"action": "modelar"`.
+A linha em `offer_actions` é criada antes do POST. `action` é `baixar_top_ads`, `modelar`, `dissecar` ou `varredura_idiomas`. `action_id` é o `id` dessa linha e é o mesmo valor do `PATCH /api/offer-actions/:id`. `funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem clicou, ou `sistema` no disparo automático. O corpo de **Modelar**, **dissecar** e **varredura** é o mesmo, mudando só `action`.
+
+`dissecar` dispara sozinho no primeiro `POST` de um slug novo. Não dispara de novo nos snapshots seguintes. `varredura_idiomas` dispara sozinha quando um `PATCH` grava `opportunity_score >= 4.5` e a oferta ainda não tem varredura `pending`, `sent` ou `done`.
+
+### language_scan
+
+Chave de idioma ausente em `results`: aquele idioma não foi varrido. Lista vazia: foi varrido e não achou oferta. URLs perdem o mesmo rastreio dos outros campos.
+
+```json
+{
+  "language_scan": {
+    "ran_at": "2026-11-17T10:00:00.000Z",
+    "results": {
+      "es": [
+        {
+          "library_url": "https://www.facebook.com/ads/library/?view_all_page_id=200001",
+          "name": "Protocolo Quema 21",
+          "page_url": "https://oferta.exemplo/es/quiz",
+          "checkout_url": "https://pay.oferta.exemplo/es/checkout",
+          "front_ticket": "€ 27"
+        }
+      ],
+      "en": [],
+      "fr": [],
+      "de": [],
+      "it": [],
+      "pt": []
+    }
+  }
+}
+```
 
 Status do pedido: `pending`, `sent`, `failed`, `done`. O botão mostra “Pedido enviado” depois do POST aceito, “Falhou” se o webhook recusar ou estourar o tempo, e o link “Pasta no Drive” quando o bot marcar `done` com `result_url`.
 

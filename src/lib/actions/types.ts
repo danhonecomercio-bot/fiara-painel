@@ -1,4 +1,5 @@
-export const OFFER_ACTIONS = ["baixar_top_ads", "modelar"] as const;
+export const OFFER_ACTIONS = ["baixar_top_ads", "modelar", "dissecar", "varredura_idiomas"] as const;
+export const BUTTON_ACTIONS = ["baixar_top_ads", "modelar", "varredura_idiomas"] as const;
 export const OFFER_ACTION_STATUSES = ["pending", "sent", "failed", "done"] as const;
 
 export type OfferActionName = (typeof OFFER_ACTIONS)[number];
@@ -23,4 +24,5 @@ export type ActionStore = {
   ): Promise<OfferAction | null>;
   get(id: string): Promise<OfferAction | null>;
   latestForOffer(offerId: string): Promise<OfferAction[]>;
+  listForOffer(offerId: string): Promise<OfferAction[]>;
 };

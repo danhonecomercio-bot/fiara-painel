@@ -7,14 +7,20 @@ export type OfferFilters = {
   nicho: string[];
   idioma: string[];
   oportunidade: ScoreFilter[];
+  soOportunidades: boolean;
   ordem: "anuncios" | "crescimento" | "recentes";
 };
+
+export function isOpportunityScore(score: number | null | undefined) {
+  return score != null && score >= 4.5;
+}
 
 export function parseFilters(params: {
   q?: string | string[];
   nicho?: string | string[];
   idioma?: string | string[];
   oportunidade?: string | string[];
+  so_oportunidades?: string | string[];
   ordem?: string | string[];
 }): OfferFilters {
   const ordem = first(params.ordem);
@@ -23,6 +29,7 @@ export function parseFilters(params: {
     nicho: many(params.nicho),
     idioma: many(params.idioma),
     oportunidade: many(params.oportunidade).filter(isScoreFilter),
+    soOportunidades: first(params.so_oportunidades) === "1",
     ordem:
       ordem === "crescimento" || ordem === "recentes" || ordem === "anuncios"
         ? ordem
@@ -40,6 +47,7 @@ export function filterAndSort(cards: OfferCard[], filters: OfferFilters) {
     if (filters.oportunidade.length > 0 && !matchesScore(card.opportunity_score, filters.oportunidade)) {
       return false;
     }
+    if (filters.soOportunidades && !isOpportunityScore(card.opportunity_score)) return false;
     if (!query) return true;
     const haystack = [
       card.title,

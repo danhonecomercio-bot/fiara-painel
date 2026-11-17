@@ -1,4 +1,14 @@
+import { isOpportunityScore } from "@/lib/offers/query";
 import { cn } from "@/lib/utils";
+
+export function OportunidadeMark({ score }: { score: number | null }) {
+  if (!isOpportunityScore(score)) return null;
+  return (
+    <span className="inline-flex items-center whitespace-nowrap rounded bg-gold px-1.5 py-0.5 text-xs font-semibold leading-5 text-black">
+      Oportunidade
+    </span>
+  );
+}
 
 export function OpportunityBadge({ score }: { score: number | null }) {
   if (score == null) {

@@ -4,7 +4,7 @@ import type { ActionStore, OfferAction, OfferActionName } from "./types";
 import { postWebhook, webhookBody, type WebhookConfig } from "./webhook";
 
 export async function requestOfferAction(input: {
-  offer: OfferDetail;
+  offer: Pick<OfferDetail, "id" | "slug" | "title" | "libraries">;
   action: OfferActionName;
   requestedBy: string;
   store: ActionStore;

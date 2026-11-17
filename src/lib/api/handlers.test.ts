@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { MemoryOfferRepository } from "../data/memory-repository";
 import { seedExampleOffers } from "../offers/examples";
 import { adsReadout, formatUpdated, heatPrefix } from "../offers/format";
+import { offerPatchSchema } from "../offers/schema";
 import { getOffers, patchOfferBySlug, postOffers } from "./handlers";
 
 const KEY = "test-bot-key";
@@ -21,6 +22,36 @@ function authorized(body: unknown, method = "POST") {
     body: JSON.stringify(body),
   });
 }
+
+describe("language_scan", () => {
+  it("tira o rastreio das URLs da varredura", () => {
+    const parsed = offerPatchSchema.parse({
+      language_scan: {
+        ran_at: "2026-11-17T10:00:00.000Z",
+        results: {
+          es: [
+            {
+              library_url: "https://www.facebook.com/ads/library/?id=1&utm_source=meta&fbclid=abc",
+              name: "Oferta ES",
+              page_url: "https://oferta.exemplo/es?src=meta",
+              checkout_url: "https://pay.oferta.exemplo/es?gclid=1",
+              front_ticket: "€ 27",
+            },
+          ],
+          en: [],
+        },
+      },
+    });
+    assert.equal(
+      parsed.language_scan?.results.es?.[0]?.library_url,
+      "https://www.facebook.com/ads/library/?id=1",
+    );
+    assert.equal(parsed.language_scan?.results.es?.[0]?.page_url, "https://oferta.exemplo/es");
+    assert.equal(parsed.language_scan?.results.es?.[0]?.checkout_url, "https://pay.oferta.exemplo/es");
+    assert.deepEqual(parsed.language_scan?.results.en, []);
+    assert.equal(parsed.language_scan?.results.pt, undefined);
+  });
+});
 
 describe("API dos bots", () => {
   it("recusa chamada sem a chave e não grava", async () => {

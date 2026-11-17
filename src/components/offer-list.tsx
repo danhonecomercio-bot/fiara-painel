@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AdsReadout } from "@/components/ads-readout";
-import { OpportunityBadge } from "@/components/opportunity-badge";
+import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
 import { formatUpdated, heatLabel, heatPrefix } from "@/lib/offers/format";
 import type { OfferCard } from "@/lib/offers/types";
 
@@ -44,7 +44,10 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
                 <td className="px-3 py-2.5">{offer.language_country ?? "—"}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap">{offer.funnel_model ?? "—"}</td>
                 <td className="px-3 py-2.5">
-                  <OpportunityBadge score={offer.opportunity_score} />
+                  <span className="inline-flex flex-wrap items-center gap-1">
+                    <OportunidadeMark score={offer.opportunity_score} />
+                    <OpportunityBadge score={offer.opportunity_score} />
+                  </span>
                 </td>
                 <td className="px-3 py-2.5 whitespace-nowrap text-muted">
                   {offer.last_captured_at ? formatUpdated(offer.last_captured_at) : "sem leitura"}
@@ -66,7 +69,10 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
     >
       <div className="flex items-start justify-between gap-3">
         <OfferTitle offer={offer} linked={false} />
-        <OpportunityBadge score={offer.opportunity_score} />
+        <span className="inline-flex flex-wrap items-center justify-end gap-1">
+          <OportunidadeMark score={offer.opportunity_score} />
+          <OpportunityBadge score={offer.opportunity_score} />
+        </span>
       </div>
       <AdsReadout
         total={offer.total_active_ads}

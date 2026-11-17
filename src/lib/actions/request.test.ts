@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { OfferDetail } from "../offers/types";
 import { createMemoryActionStore } from "./memory-store";
+import { shouldAutoVarredura } from "./auto";
 import { requestOfferAction } from "./request";
-import { postWebhook, webhookBody } from "./webhook";
+import { postWebhook, webhookBody, webhookConfig } from "./webhook";
 
 function offer(): OfferDetail {
   return {
@@ -26,6 +27,7 @@ function offer(): OfferDetail {
     order_bumps: [],
     upsells: [],
     modeling_notes: null,
+    language_scan: null,
     raw: null,
     status: "active",
     created_at: "2026-11-16T10:00:00.000Z",
@@ -39,6 +41,11 @@ function offer(): OfferDetail {
     ],
     snapshots: [],
   };
+}
+
+function restore(name: string, value: string | undefined) {
+  if (value == null) delete process.env[name];
+  else process.env[name] = value;
 }
 
 describe("webhook de ações", () => {
@@ -105,6 +112,55 @@ describe("webhook de ações", () => {
     assert.equal(failed.status, "failed");
     assert.equal(failed.error, "Webhook respondeu 500.");
     assert.equal((await store.latestForOffer("offer-1")).length, 2);
+  });
+
+  it("prefere o dissecador e aceita o par antigo dos top ads", () => {
+    const saved = {
+      dissectorUrl: process.env.DISSECADOR_WEBHOOK_URL,
+      dissectorKey: process.env.DISSECADOR_WEBHOOK_KEY,
+      topadsUrl: process.env.TOPADS_WEBHOOK_URL,
+      topadsKey: process.env.TOPADS_WEBHOOK_KEY,
+      minerUrl: process.env.MINERADOR_WEBHOOK_URL,
+      minerKey: process.env.MINERADOR_WEBHOOK_KEY,
+    };
+    delete process.env.DISSECADOR_WEBHOOK_URL;
+    delete process.env.DISSECADOR_WEBHOOK_KEY;
+    process.env.TOPADS_WEBHOOK_URL = "https://topads.exemplo/hook";
+    process.env.TOPADS_WEBHOOK_KEY = "top";
+    assert.equal(webhookConfig("dissecar")?.url, "https://topads.exemplo/hook");
+    assert.equal(webhookConfig("baixar_top_ads")?.key, "top");
+    process.env.DISSECADOR_WEBHOOK_URL = "https://dissecar.exemplo/hook";
+    process.env.DISSECADOR_WEBHOOK_KEY = "dis";
+    assert.equal(webhookConfig("baixar_top_ads")?.url, "https://dissecar.exemplo/hook");
+    delete process.env.MINERADOR_WEBHOOK_URL;
+    delete process.env.MINERADOR_WEBHOOK_KEY;
+    assert.equal(webhookConfig("varredura_idiomas"), null);
+    process.env.MINERADOR_WEBHOOK_URL = "https://minerador.exemplo/hook";
+    process.env.MINERADOR_WEBHOOK_KEY = "mina";
+    assert.equal(webhookConfig("varredura_idiomas")?.key, "mina");
+    restore("DISSECADOR_WEBHOOK_URL", saved.dissectorUrl);
+    restore("DISSECADOR_WEBHOOK_KEY", saved.dissectorKey);
+    restore("TOPADS_WEBHOOK_URL", saved.topadsUrl);
+    restore("TOPADS_WEBHOOK_KEY", saved.topadsKey);
+    restore("MINERADOR_WEBHOOK_URL", saved.minerUrl);
+    restore("MINERADOR_WEBHOOK_KEY", saved.minerKey);
+  });
+
+  it("não repete a varredura automática se já existe pedido aberto ou concluído", () => {
+    assert.equal(shouldAutoVarredura(5, []), true);
+    assert.equal(shouldAutoVarredura(4, []), false);
+    assert.equal(
+      shouldAutoVarredura(5, [{ action: "varredura_idiomas", status: "failed" }]),
+      true,
+    );
+    assert.equal(
+      shouldAutoVarredura(5, [{ action: "varredura_idiomas", status: "pending" }]),
+      false,
+    );
+    assert.equal(
+      shouldAutoVarredura(5, [{ action: "varredura_idiomas", status: "done" }]),
+      false,
+    );
   });
 
   it("envia os dois headers e não repete a chamada", async () => {

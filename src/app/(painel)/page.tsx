@@ -1,7 +1,7 @@
 import { OfferFilters } from "@/components/offer-filters";
 import { OfferList } from "@/components/offer-list";
 import { listOfferCards } from "@/lib/data/read-offers";
-import { filterAndSort, parseFilters } from "@/lib/offers/query";
+import { filterAndSort, isOpportunityScore, parseFilters } from "@/lib/offers/query";
 
 export const metadata = { title: "Ofertas" };
 
@@ -28,7 +28,7 @@ export default async function OfertasPage({
   languages.sort((a, b) => a.localeCompare(b, "pt-BR"));
 
   const ads = offers.reduce((sum, offer) => sum + (offer.total_active_ads ?? 0), 0);
-  const altas = offers.filter((offer) => (offer.opportunity_score ?? -1) >= 4).length;
+  const altas = offers.filter((offer) => isOpportunityScore(offer.opportunity_score)).length;
   const examples = cards.some((card) => card.is_example);
 
   return (
@@ -41,7 +41,7 @@ export default async function OfertasPage({
         </p>
         <p className="text-sm tabular-nums">
           {offers.length} {offers.length === 1 ? "oferta" : "ofertas"} neste filtro · {ads} anúncios na
-          última leitura · {altas} {altas === 1 ? "nota 4 ou 5" : "notas 4 ou 5"}
+          última leitura · {altas} {altas === 1 ? "oportunidade" : "oportunidades"}
         </p>
         {examples ? (
           <p className="text-sm text-gold">

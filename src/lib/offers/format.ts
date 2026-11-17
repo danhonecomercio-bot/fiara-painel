@@ -41,6 +41,11 @@ export function formatUpdated(input: string | Date) {
   return `atualizado em ${stamp.day}/${stamp.month} - ${stamp.hour}h`;
 }
 
+export function formatScanStamp(input: string | Date) {
+  const stamp = saoPauloStamp(input);
+  return `varredura em ${stamp.day}/${stamp.month} - ${stamp.hour}h`;
+}
+
 export function formatSince(input: string | Date) {
   const stamp = saoPauloStamp(input);
   return `${stamp.day}/${stamp.month} ${stamp.hour}h`;
