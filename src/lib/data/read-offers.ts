@@ -32,11 +32,13 @@ export async function getOfferDetail(slug: string) {
         offer_libraries (page_name, library_url, active_ads),
         offer_snapshots (captured_at, total_active_ads, per_library)
       `;
-  const without = (message: string) =>
-    optional.reduce((sql, column) => (message.includes(column) ? sql.replace(new RegExp(`,\\s*${column}\\b`), "") : sql), detailSelect);
+  const legacySelect = optional.reduce(
+    (sql, column) => sql.replace(new RegExp(`,\\s*${column}\\b`), ""),
+    detailSelect,
+  );
   let result = await supabase.from("offers").select(detailSelect).eq("slug", slug).maybeSingle();
   if (result.error && optional.some((column) => result.error?.message.includes(column))) {
-    result = await supabase.from("offers").select(without(result.error.message)).eq("slug", slug).maybeSingle();
+    result = await supabase.from("offers").select(legacySelect).eq("slug", slug).maybeSingle();
   }
   if (result.error) throw new Error(result.error.message);
   if (!result.data) return null;

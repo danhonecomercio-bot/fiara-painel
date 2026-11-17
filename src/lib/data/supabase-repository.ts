@@ -45,11 +45,11 @@ const OPTIONAL_COLUMNS = [
   "google_library_url",
 ];
 
-function selectWithout(message: string) {
-  return OPTIONAL_COLUMNS.reduce((sql, column) => {
-    if (!message.includes(column)) return sql;
-    return sql.replace(new RegExp(`,\\s*${column}\\b`), "");
-  }, OFFER_SELECT);
+function selectWithoutMissing() {
+  return OPTIONAL_COLUMNS.reduce(
+    (sql, column) => sql.replace(new RegExp(`,\\s*${column}\\b`), ""),
+    OFFER_SELECT,
+  );
 }
 
 function mentionsMissingColumn(message: string) {
@@ -144,7 +144,7 @@ export class SupabaseOfferRepository implements OfferRepository {
             .from("offers")
             .update(payload)
             .eq("slug", slug)
-            .select(selectWithout(first.error.message))
+            .select(selectWithoutMissing())
             .maybeSingle()
         : first;
     if (row.error) throw new Error(row.error.message);
@@ -177,7 +177,7 @@ export class SupabaseOfferRepository implements OfferRepository {
     if (first.error && mentionsMissingColumn(first.error.message)) {
       let legacy = this.client
         .from("offers")
-        .select(selectWithout(first.error.message))
+        .select(selectWithoutMissing())
         .order("updated_at", { ascending: false })
         .order("captured_at", { referencedTable: "offer_snapshots", ascending: false })
         .limit(30, { referencedTable: "offer_snapshots" })
