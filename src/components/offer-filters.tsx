@@ -4,16 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-const SCORE_OPTIONS = ["5", "4", "3", "2", "1", "0", "nao_avaliada"] as const;
-const SCORE_LABEL: Record<(typeof SCORE_OPTIONS)[number], string> = {
-  "5": "5",
-  "4": "4",
-  "3": "3",
-  "2": "2",
-  "1": "1",
-  "0": "0",
-  nao_avaliada: "Não avaliada",
-};
+import { SCORE_FILTERS, scoreFilterLabel, type ScoreFilter } from "@/lib/offers/query";
+
+const SCORE_LABEL = Object.fromEntries(
+  SCORE_FILTERS.map((value) => [value, scoreFilterLabel(value)]),
+) as Record<ScoreFilter, string>;
 
 export function OfferFilters({
   niches,
@@ -103,7 +98,7 @@ export function OfferFilters({
           key={`oportunidade-${selectedOportunidade.join("|")}`}
           label="Oportunidade"
           param="oportunidade"
-          options={[...SCORE_OPTIONS]}
+          options={[...SCORE_FILTERS]}
           selected={selectedOportunidade}
           labels={SCORE_LABEL}
         />

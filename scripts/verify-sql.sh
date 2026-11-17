@@ -10,6 +10,7 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/scripts/fixtures/example-offers.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261116183000_opportunity_score_google_library_actions.sql"
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261117020000_language_scan_and_actions.sql"
+sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/migrations/20261117023000_opportunity_score_half_steps.sql"
 
 sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$db" <<'SQL'
 set role authenticated;

@@ -136,7 +136,7 @@ curl -sS -X POST "$APP_URL/api/offers" \
 | `libraries` | Obrigatório. Pelo menos uma biblioteca da Meta. Cada `library_url` é http(s) e não pode repetir no mesmo payload. |
 | `google_library_url` | Opcional. URL http(s) do Google Ads Transparency Center. |
 | `opportunity` | Enum antigo, ainda aceito: `alta`, `media`, `baixa`, `nenhuma`, `nao_avaliada`. O painel não mostra mais esse valor. |
-| `opportunity_score` | Inteiro de 0 a 5, ou `null` para “não avaliada”. Nota `>= 4,5` (na prática, 5) marca a oferta como Oportunidade. |
+| `opportunity_score` | Número de 0 a 5, de meio em meio (`0`, `0.5`, `1` … `5`), ou `null` para “não avaliada”. Nota `>= 4.5` marca a oferta como Oportunidade. |
 | `language_scan` | Opcional. Objeto `{ ran_at, results }` descrito abaixo. `null` apaga. |
 | `funnel_model` | `Quiz`, `LP`, `Quiz+LP`, `Quiz+VSL`, `VSL` ou `null`. |
 | `status` | `active` ou `paused`. |

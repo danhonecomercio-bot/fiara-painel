@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { filterAndSort, parseFilters } from "./query";
+import { filterAndSort, isOpportunityScore, parseFilters } from "./query";
 import type { OfferCard } from "./types";
 
 function card(partial: Partial<OfferCard> & Pick<OfferCard, "slug" | "title">): OfferCard {
@@ -89,6 +89,21 @@ describe("filtros", () => {
       filterAndSort(cards, parseFilters({ ordem: "recentes" })).map((item) => item.slug),
       ["a", "b", "c"],
     );
+  });
+
+  it("aceita nota 4,5 no filtro e na oportunidade", () => {
+    const filters = parseFilters({ oportunidade: "4,5" });
+    assert.deepEqual(filters.oportunidade, ["4.5"]);
+    const result = filterAndSort(
+      [card({ slug: "meio", title: "Meio", opportunity_score: 4.5 })],
+      filters,
+    );
+    assert.deepEqual(
+      result.map((item) => item.slug),
+      ["meio"],
+    );
+    assert.equal(isOpportunityScore(4.5), true);
+    assert.equal(isOpportunityScore(4), false);
   });
 
   it("mostra só oportunidades com nota 4,5 ou mais", () => {

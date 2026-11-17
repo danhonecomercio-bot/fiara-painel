@@ -5,7 +5,7 @@ import { AdsReadout } from "@/components/ads-readout";
 import { OfferActions } from "@/components/offer-actions";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
 import type { OfferAction } from "@/lib/actions/types";
-import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatUpdated, stripTracking } from "@/lib/offers/format";
+import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatScore, formatUpdated, stripTracking } from "@/lib/offers/format";
 import { SCAN_LANGUAGES } from "@/lib/offers/schema";
 import type { OfferDetail } from "@/lib/offers/types";
 
@@ -79,7 +79,7 @@ export function OfferDetailView({
           <Field label="Nicho">{text(offer.niche)}</Field>
           <Field label="Idioma/país">{text(offer.language_country)}</Field>
           <Field label="Oportunidade">
-            {offer.opportunity_score == null ? "Não avaliada" : `Nota ${offer.opportunity_score}`}
+            {offer.opportunity_score == null ? "Não avaliada" : `Nota ${formatScore(offer.opportunity_score)}`}
           </Field>
           <Field label="Notas de oportunidade">{text(offer.opportunity_notes)}</Field>
           <Field label="Expert">{offer.expert ? "Sim" : "Não"}</Field>

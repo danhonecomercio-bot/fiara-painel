@@ -46,6 +46,29 @@ export function formatListUpdated(input: string | Date) {
   return `${stamp.day}/${stamp.month} - ${stamp.hour}h`;
 }
 
+export function isHalfStepScore(value: number) {
+  if (!Number.isFinite(value) || value < 0 || value > 5) return false;
+  return Math.abs(value * 2 - Math.round(value * 2)) < 1e-6;
+}
+
+export function normalizeScore(value: unknown) {
+  const number =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim()
+        ? Number(value.trim().replace(",", "."))
+        : Number.NaN;
+  if (!isHalfStepScore(number)) return null;
+  return Math.round(number * 2) / 2;
+}
+
+export function formatScore(score: number) {
+  return score.toLocaleString("pt-BR", {
+    minimumFractionDigits: Number.isInteger(score) ? 0 : 1,
+    maximumFractionDigits: 1,
+  });
+}
+
 export function formatTicketCompact(value: string | null | undefined) {
   const text = value?.trim();
   if (!text) return null;

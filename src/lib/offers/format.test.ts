@@ -6,7 +6,9 @@ import {
   formatCalendarDate,
   formatListUpdated,
   formatScanStamp,
+  formatScore,
   formatTicketCompact,
+  isHalfStepScore,
   formatSince,
   formatUpdated,
   heatPrefix,
@@ -44,6 +46,10 @@ describe("leitura de anúncios", () => {
     assert.equal(formatTicketCompact("R$ 47 à vista ou 12x R$ 4,91"), "R$ 47,00");
     assert.equal(formatTicketCompact("R$ 27,5"), "R$ 27,50");
     assert.equal(formatTicketCompact("sem preço"), null);
+    assert.equal(formatScore(3.5), "3,5");
+    assert.equal(formatScore(4), "4");
+    assert.equal(isHalfStepScore(4.5), true);
+    assert.equal(isHalfStepScore(4.2), false);
   });
 
   it("junta o preço do order bump numa linha e tira o rastreio da URL", () => {

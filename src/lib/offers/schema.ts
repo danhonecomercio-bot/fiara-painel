@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { stripTracking } from "./format";
+import { isHalfStepScore, stripTracking } from "./format";
 
 export const SCAN_LANGUAGES = ["es", "en", "fr", "de", "it", "pt"] as const;
 
@@ -124,9 +124,7 @@ const offerFields = {
   opportunity: z.enum(OPPORTUNITIES).optional(),
   opportunity_score: z
     .number()
-    .int("opportunity_score precisa ser inteiro.")
-    .min(0, "opportunity_score vai de 0 a 5.")
-    .max(5, "opportunity_score vai de 0 a 5.")
+    .refine(isHalfStepScore, "opportunity_score vai de 0 a 5, de meio em meio.")
     .nullable()
     .optional(),
   opportunity_notes: optionalText(8000),

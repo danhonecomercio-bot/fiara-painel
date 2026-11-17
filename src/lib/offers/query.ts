@@ -1,6 +1,26 @@
 import type { OfferCard } from "./types";
 
-export type ScoreFilter = "0" | "1" | "2" | "3" | "4" | "5" | "nao_avaliada";
+export const SCORE_FILTERS = [
+  "5",
+  "4.5",
+  "4",
+  "3.5",
+  "3",
+  "2.5",
+  "2",
+  "1.5",
+  "1",
+  "0.5",
+  "0",
+  "nao_avaliada",
+] as const;
+
+export type ScoreFilter = (typeof SCORE_FILTERS)[number];
+
+export function scoreFilterLabel(value: ScoreFilter) {
+  if (value === "nao_avaliada") return "Não avaliada";
+  return value.replace(".", ",");
+}
 
 export type OfferFilters = {
   q: string;
@@ -28,7 +48,9 @@ export function parseFilters(params: {
     q: first(params.q) ?? "",
     nicho: many(params.nicho),
     idioma: many(params.idioma),
-    oportunidade: many(params.oportunidade).filter(isScoreFilter),
+    oportunidade: many(params.oportunidade)
+      .map((value) => value.replace(",", "."))
+      .filter(isScoreFilter),
     soOportunidades: first(params.so_oportunidades) === "1",
     ordem:
       ordem === "crescimento" || ordem === "recentes" || ordem === "anuncios"
@@ -112,10 +134,11 @@ function many(value: string | string[] | undefined) {
 }
 
 function isScoreFilter(value: string): value is ScoreFilter {
-  return value === "nao_avaliada" || value === "0" || value === "1" || value === "2" || value === "3" || value === "4" || value === "5";
+  return (SCORE_FILTERS as readonly string[]).includes(value);
 }
 
 function matchesScore(score: number | null, selected: ScoreFilter[]) {
   if (score == null) return selected.includes("nao_avaliada");
-  return selected.includes(String(score) as ScoreFilter);
+  const token = Number.isInteger(score) ? String(score) : score.toFixed(1);
+  return selected.includes(token as ScoreFilter);
 }

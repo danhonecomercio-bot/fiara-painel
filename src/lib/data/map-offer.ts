@@ -1,3 +1,4 @@
+import { normalizeScore } from "../offers/format";
 import type { FunnelModel, Opportunity, OfferStatus } from "../offers/schema";
 import type { LibraryRow, OfferCard, OfferDetail, SnapshotRow } from "../offers/types";
 
@@ -173,8 +174,7 @@ function asLanguageScan(value: unknown) {
 }
 
 function asScore(value: unknown) {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 5) return null;
-  return value;
+  return normalizeScore(value);
 }
 
 function asOpportunity(value: unknown): Opportunity {

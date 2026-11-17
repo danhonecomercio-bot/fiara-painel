@@ -25,7 +25,7 @@ Entre com `demo@fiara.com.br` / `fiara-demo`. As três ofertas são exemplo e so
 
 ## 1. Aplicar as migrations
 
-O schema está em `supabase/migrations/`. Rode os arquivos em ordem: primeiro `20261116140645_create_offer_swipe_file.sql`, depois `20261116183000_opportunity_score_google_library_actions.sql` (nota 0–5, biblioteca do Google e pedidos dos botões) e `20261117020000_language_scan_and_actions.sql` (varredura em idiomas e as ações dissecar e varredura_idiomas).
+O schema está em `supabase/migrations/`. Rode os arquivos em ordem: primeiro `20261116140645_create_offer_swipe_file.sql`, depois `20261116183000_opportunity_score_google_library_actions.sql` (nota 0–5, biblioteca do Google e pedidos dos botões), depois `20261117020000_language_scan_and_actions.sql` (varredura em idiomas e as ações dissecar e varredura_idiomas) e `20261117023000_opportunity_score_half_steps.sql` (nota de meio em meio).
 
 Pelo CLI, na raiz do projeto, com o [Supabase CLI](https://supabase.com/docs/guides/cli) autenticado:
 

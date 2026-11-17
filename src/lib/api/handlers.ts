@@ -172,6 +172,17 @@ export async function postOffers(request: Request, repo: OfferRepository, apiKey
           503,
         );
       }
+      if (halfStepColumn(message, offer.opportunity_score)) {
+        return json(
+          {
+            error: "nao_configurado",
+            message: "A nota com decimal ainda precisa da migração numeric(2,1). Notas inteiras continuam válidas.",
+            failed_slug: offer.slug,
+            results,
+          },
+          503,
+        );
+      }
       return json(
         {
           error: "falha_parcial",
@@ -228,6 +239,15 @@ export async function patchOfferBySlug(
         {
           error: "nao_configurado",
           message: "A coluna language_scan ainda não existe. Rode a migração nova.",
+        },
+        503,
+      );
+    }
+    if (halfStepColumn(message, parsed.data.opportunity_score)) {
+      return json(
+        {
+          error: "nao_configurado",
+          message: "A nota com decimal ainda precisa da migração numeric(2,1). Notas inteiras continuam válidas.",
         },
         503,
       );
@@ -356,6 +376,14 @@ async function maybeVarredura(offer: OfferDetail, score: number | null | undefin
     const message = error instanceof Error ? error.message : "falha";
     console.error(`[fiara] auto varredura_idiomas falhou para ${offer.slug}: ${message}`);
   }
+}
+
+function halfStepColumn(message: string, score: number | null | undefined) {
+  return (
+    score != null &&
+    !Number.isInteger(score) &&
+    /smallint|type integer|invalid input syntax for type/i.test(message)
+  );
 }
 
 function readBound(value: string | null, fallback: number, min: number, max: number) {

@@ -23,6 +23,15 @@ function authorized(body: unknown, method = "POST") {
   });
 }
 
+describe("opportunity_score", () => {
+  it("aceita meios pontos e rejeita o que não é múltiplo de 0,5", () => {
+    assert.equal(offerPatchSchema.parse({ opportunity_score: 4 }).opportunity_score, 4);
+    assert.equal(offerPatchSchema.parse({ opportunity_score: 3.5 }).opportunity_score, 3.5);
+    assert.equal(offerPatchSchema.safeParse({ opportunity_score: 3.2 }).success, false);
+    assert.equal(offerPatchSchema.safeParse({ opportunity_score: 5.5 }).success, false);
+  });
+});
+
 describe("language_scan", () => {
   it("tira o rastreio das URLs da varredura", () => {
     const parsed = offerPatchSchema.parse({
