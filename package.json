@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import ./scripts/register-tests.mjs --test src/lib/api/handlers.test.ts src/lib/offers/format.test.ts src/lib/offers/query.test.ts src/lib/actions/request.test.ts",
+    "test": "node --import ./scripts/register-tests.mjs --test src/lib/api/handlers.test.ts src/lib/offers/format.test.ts src/lib/offers/query.test.ts src/lib/actions/request.test.ts src/lib/auth/api-gate.test.ts",
     "test:sql": "bash scripts/verify-sql.sh",
     "seed": "node --import ./scripts/register-tests.mjs scripts/seed.ts",
     "create-admin": "node scripts/create-admin.ts"

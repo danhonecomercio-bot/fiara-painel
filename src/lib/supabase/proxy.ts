@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { gateDecision, hasBearerAuthorization } from "../auth/api-gate";
 import { supabaseAnonKey, supabaseUrl } from "./env";
 
 export async function updateSession(request: NextRequest) {
@@ -26,9 +27,13 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const loggedIn = Boolean(data?.claims?.sub);
   const { pathname } = request.nextUrl;
-  const isPublic = pathname.startsWith("/login") || pathname.startsWith("/api/offers");
+  const decision = gateDecision(pathname, {
+    loggedIn,
+    hasBearer: hasBearerAuthorization(request.headers.get("authorization")),
+  });
 
-  if (!loggedIn && !isPublic) {
+  if (decision === "unauthorized") return jsonWithSession(supabaseResponse);
+  if (decision === "login") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
@@ -45,14 +50,30 @@ export async function updateSession(request: NextRequest) {
   return supabaseResponse;
 }
 
+function jsonWithSession(supabaseResponse: NextResponse) {
+  const response = NextResponse.json(
+    {
+      error: "nao_autorizado",
+      message: "Envie o header Authorization: Bearer <BOT_API_KEY>.",
+    },
+    { status: 401, headers: { "cache-control": "no-store" } },
+  );
+  copySession(supabaseResponse, response);
+  return response;
+}
+
 function redirectWithSession(supabaseResponse: NextResponse, url: URL) {
   const redirectResponse = NextResponse.redirect(url);
+  copySession(supabaseResponse, redirectResponse);
+  return redirectResponse;
+}
+
+function copySession(supabaseResponse: NextResponse, response: NextResponse) {
   supabaseResponse.cookies.getAll().forEach((cookie) => {
-    redirectResponse.cookies.set(cookie);
+    response.cookies.set(cookie);
   });
   for (const header of ["cache-control", "expires", "pragma"]) {
     const value = supabaseResponse.headers.get(header);
-    if (value) redirectResponse.headers.set(header, value);
+    if (value) response.headers.set(header, value);
   }
-  return redirectResponse;
 }
