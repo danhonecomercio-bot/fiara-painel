@@ -129,6 +129,10 @@ export class MemoryOfferRepository implements OfferRepository {
     return cloneDetail(next);
   }
 
+  async deleteOffer(slug: string): Promise<boolean> {
+    return this.offers.delete(slug);
+  }
+
   async listOffers(query: ListQuery): Promise<OfferDetail[]> {
     let rows = [...this.offers.values()];
     if (query.since) {

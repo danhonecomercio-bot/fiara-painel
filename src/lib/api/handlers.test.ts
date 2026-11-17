@@ -4,7 +4,7 @@ import { MemoryOfferRepository } from "../data/memory-repository";
 import { seedExampleOffers } from "../offers/examples";
 import { adsReadout, formatUpdated, heatPrefix } from "../offers/format";
 import { offerPatchSchema } from "../offers/schema";
-import { getOffers, patchOfferBySlug, postOffers } from "./handlers";
+import { deleteOfferBySlug, getOffers, patchOfferBySlug, postOffers } from "./handlers";
 
 const KEY = "test-bot-key";
 
@@ -212,6 +212,31 @@ describe("API dos bots", () => {
     assert.equal(body.offer.opportunity_score, 4);
     assert.equal(body.offer.opportunity_notes, "Escala consistente.");
     assert.equal(repo.getDetail("boa")?.snapshots.length, before);
+
+    const niche = await patchOfferBySlug(
+      authorized({ niche: "Emagrecimento" }, "PATCH"),
+      "boa",
+      repo,
+      KEY,
+    );
+    assert.equal(niche.status, 200);
+    assert.equal((await niche.json()).offer.niche, "Emagrecimento");
+
+    const removed = await deleteOfferBySlug(
+      authorized(undefined, "DELETE"),
+      "boa",
+      repo,
+      KEY,
+    );
+    assert.equal(removed.status, 200);
+    assert.equal(repo.getDetail("boa"), null);
+    const missingDelete = await deleteOfferBySlug(
+      authorized(undefined, "DELETE"),
+      "boa",
+      repo,
+      KEY,
+    );
+    assert.equal(missingDelete.status, 404);
 
     const missing = await patchOfferBySlug(
       authorized({ opportunity: "baixa" }, "PATCH"),

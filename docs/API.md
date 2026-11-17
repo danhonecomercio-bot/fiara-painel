@@ -132,6 +132,7 @@ curl -sS -X POST "$APP_URL/api/offers" \
 | --- | --- |
 | `slug` | Obrigatório, estável, sem espaço e sem `/`. |
 | `title` | Obrigatório. |
+| `niche` | Texto de até 120 caracteres, ou `null`. O `PATCH` aceita. |
 | `libraries` | Obrigatório. Pelo menos uma biblioteca da Meta. Cada `library_url` é http(s) e não pode repetir no mesmo payload. |
 | `google_library_url` | Opcional. URL http(s) do Google Ads Transparency Center. |
 | `opportunity` | Enum antigo, ainda aceito: `alta`, `media`, `baixa`, `nenhuma`, `nao_avaliada`. O painel não mostra mais esse valor. |
@@ -158,6 +159,7 @@ curl -sS -X PATCH "$APP_URL/api/offers/protocolo-queima-21" \
   -H "Authorization: Bearer $BOT_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
+    "niche": "Emagrecimento",
     "opportunity_score": 4,
     "opportunity_notes": "Escala consistente nas duas últimas leituras. Modelar o quiz.",
     "google_library_url": "https://adstransparency.google.com/advertiser/AR123?region=BR&utm_source=meta"
@@ -182,7 +184,34 @@ curl -sS -X PATCH "$APP_URL/api/offers/protocolo-queima-21" \
 }
 ```
 
-A resposta traz a oferta inteira, as bibliotecas e até 30 snapshots, do mais novo para o mais antigo. O exemplo acima está abreviado.
+A resposta traz a oferta inteira, as bibliotecas e até 30 snapshots, do mais novo para o mais antigo. O exemplo acima está abreviado. `niche` entra nesse mesmo corpo, como texto.
+
+## DELETE /api/offers/:slug
+
+Apaga a oferta. As bibliotecas, os snapshots e os pedidos em `offer_actions` saem junto, por causa do `on delete cascade`.
+
+```bash
+curl -sS -X DELETE "$APP_URL/api/offers/protocolo-queima-21" \
+  -H "Authorization: Bearer $BOT_API_KEY"
+```
+
+### Resposta 200
+
+```json
+{
+  "ok": true,
+  "slug": "protocolo-queima-21"
+}
+```
+
+### Resposta 404
+
+```json
+{
+  "error": "nao_encontrada",
+  "message": "Não há oferta com esse slug."
+}
+```
 
 ### Resposta 404
 

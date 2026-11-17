@@ -236,6 +236,27 @@ export async function patchOfferBySlug(
   }
 }
 
+export async function deleteOfferBySlug(
+  request: Request,
+  slug: string,
+  repo: OfferRepository,
+  apiKey: string | undefined,
+) {
+  const denied = authorize(request, apiKey);
+  if (denied) return denied;
+
+  try {
+    const deleted = await repo.deleteOffer(decodeURIComponent(slug));
+    if (!deleted) {
+      return json({ error: "nao_encontrada", message: "Não há oferta com esse slug." }, 404);
+    }
+    return json({ ok: true, slug: decodeURIComponent(slug) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Falha ao apagar a oferta.";
+    return json({ error: "falha_interna", message }, 500);
+  }
+}
+
 export async function getOffers(request: Request, repo: OfferRepository, apiKey: string | undefined) {
   const denied = authorize(request, apiKey);
   if (denied) return denied;

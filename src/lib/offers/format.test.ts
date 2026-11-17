@@ -4,7 +4,9 @@ import {
   adsReadout,
   formatBumpPrice,
   formatCalendarDate,
+  formatListUpdated,
   formatScanStamp,
+  formatTicketCompact,
   formatSince,
   formatUpdated,
   heatPrefix,
@@ -38,6 +40,10 @@ describe("leitura de anúncios", () => {
   it("formata data de calendário sem deslocar o dia", () => {
     assert.equal(formatCalendarDate("2026-06-03"), "03/06/2026");
     assert.equal(formatScanStamp("2026-11-16T10:00:00.000Z"), "varredura em 16/11 - 7h");
+    assert.equal(formatListUpdated("2026-11-16T17:00:00.000Z"), "16/11 - 14h");
+    assert.equal(formatTicketCompact("R$ 47 à vista ou 12x R$ 4,91"), "R$ 47,00");
+    assert.equal(formatTicketCompact("R$ 27,5"), "R$ 27,50");
+    assert.equal(formatTicketCompact("sem preço"), null);
   });
 
   it("junta o preço do order bump numa linha e tira o rastreio da URL", () => {

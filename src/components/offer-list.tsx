@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdsReadout } from "@/components/ads-readout";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
-import { formatUpdated } from "@/lib/offers/format";
+import { formatListUpdated, formatTicketCompact } from "@/lib/offers/format";
 import type { OfferCard } from "@/lib/offers/types";
 
 export function OfferList({ offers }: { offers: OfferCard[] }) {
@@ -15,7 +15,7 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
         ))}
       </ul>
       <div className="hidden overflow-x-auto rounded-md border border-line md:block">
-        <table className="w-full min-w-[860px] border-collapse text-sm">
+        <table className="w-full min-w-[920px] border-collapse text-sm">
           <thead className="bg-panel text-left text-xs uppercase tracking-wide text-gold">
             <tr>
               <th className="px-3 py-2 font-semibold">Oferta</th>
@@ -23,8 +23,9 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
               <th className="px-3 py-2 font-semibold">Nicho</th>
               <th className="px-3 py-2 font-semibold">Idioma/país</th>
               <th className="px-3 py-2 font-semibold">Funil</th>
+              <th className="w-px px-2 py-2 font-semibold">TM</th>
               <th className="px-3 py-2 font-semibold">Oportunidade</th>
-              <th className="px-3 py-2 font-semibold">Atualizado</th>
+              <th className="w-px px-2 py-2 font-semibold">Atualizado</th>
             </tr>
           </thead>
           <tbody>
@@ -43,14 +44,17 @@ export function OfferList({ offers }: { offers: OfferCard[] }) {
                 <td className="px-3 py-2.5">{offer.niche ?? "—"}</td>
                 <td className="px-3 py-2.5">{offer.language_country ?? "—"}</td>
                 <td className="px-3 py-2.5 whitespace-nowrap">{offer.funnel_model ?? "—"}</td>
+                <td className="w-px px-2 py-2.5">
+                  <TicketCell value={offer.front_ticket} />
+                </td>
                 <td className="px-3 py-2.5">
                   <span className="inline-flex flex-wrap items-center gap-1">
                     <OportunidadeMark score={offer.opportunity_score} />
                     <OpportunityBadge score={offer.opportunity_score} />
                   </span>
                 </td>
-                <td className="px-3 py-2.5 whitespace-nowrap text-muted">
-                  {offer.last_captured_at ? formatUpdated(offer.last_captured_at) : "sem leitura"}
+                <td className="w-px whitespace-nowrap px-2 py-2.5 text-muted tabular-nums">
+                  {offer.last_captured_at ? formatListUpdated(offer.last_captured_at) : "—"}
                 </td>
               </tr>
             ))}
@@ -83,11 +87,24 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
         <li>{offer.niche ?? "Nicho não informado"}</li>
         <li>{offer.language_country ?? "Idioma não informado"}</li>
         <li>{offer.funnel_model ?? "Funil não informado"}</li>
+        <li>
+          TM <TicketCell value={offer.front_ticket} />
+        </li>
       </ul>
-      <p className="text-sm text-muted">
-        {offer.last_captured_at ? formatUpdated(offer.last_captured_at) : "sem leitura"}
+      <p className="text-sm text-muted tabular-nums">
+        {offer.last_captured_at ? formatListUpdated(offer.last_captured_at) : "—"}
       </p>
     </Link>
+  );
+}
+
+function TicketCell({ value }: { value: string | null }) {
+  const compact = formatTicketCompact(value);
+  if (!compact) return <span className="text-muted">—</span>;
+  return (
+    <span title={value ?? undefined} className="whitespace-nowrap tabular-nums">
+      {compact}
+    </span>
   );
 }
 

@@ -132,6 +132,12 @@ export class SupabaseOfferRepository implements OfferRepository {
     return detail;
   }
 
+  async deleteOffer(slug: string): Promise<boolean> {
+    const { data, error } = await this.client.from("offers").delete().eq("slug", slug).select("id");
+    if (error) throw new Error(error.message);
+    return (data?.length ?? 0) > 0;
+  }
+
   async listOffers(query: ListQuery): Promise<OfferDetail[]> {
     let request = this.client
       .from("offers")

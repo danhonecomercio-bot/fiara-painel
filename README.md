@@ -34,17 +34,7 @@ supabase link --project-ref SEU_PROJECT_REF
 supabase db push
 ```
 
-Pelo SQL Editor do projeto: cole e rode o arquivo de migration inteiro, uma vez. Se quiser os três exemplos no banco de verdade, rode depois `supabase/seed.sql`. Eles estão marcados com `raw.example = true` e o título começa com `Exemplo:`. Para apagar:
-
-```sql
-delete from public.offers where raw->>'example' = 'true';
-```
-
-O mesmo seed pela API, com a service role no `.env.local`:
-
-```bash
-npm run seed
-```
+Pelo SQL Editor do projeto: cole e rode o arquivo de migration inteiro, uma vez. `supabase/seed.sql` não grava mais as ofertas de exemplo. `npm run seed` também não.
 
 O que a migration faz:
 
@@ -122,4 +112,4 @@ npm test
 npm run test:sql
 ```
 
-`npm test` cobre validação, upsert, snapshot, patch e o formato da lista (`546 (+80 desde 15/11 22h)`, estrela acima de 500, fogo acima de 200). `npm run test:sql` sobe o schema num Postgres local, aplica o seed e confere a RLS: autenticado lê, anônimo não lê, autenticado não escreve, service role escreve.
+`npm test` cobre validação, upsert, snapshot, patch e o formato da lista (`546 (+80 desde 15/11 22h)`, estrela acima de 500, fogo acima de 200). `npm run test:sql` sobe o schema num Postgres local, carrega um fixture só do teste e confere a RLS: autenticado lê, anônimo não lê, autenticado não escreve, service role escreve.

@@ -41,6 +41,31 @@ export function formatUpdated(input: string | Date) {
   return `atualizado em ${stamp.day}/${stamp.month} - ${stamp.hour}h`;
 }
 
+export function formatListUpdated(input: string | Date) {
+  const stamp = saoPauloStamp(input);
+  return `${stamp.day}/${stamp.month} - ${stamp.hour}h`;
+}
+
+export function formatTicketCompact(value: string | null | undefined) {
+  const text = value?.trim();
+  if (!text) return null;
+  const match = text.match(/(R\$|MX\$|US\$|€)\s*(\d{1,3}(?:\.\d{3})*|\d+)(?:([,.])(\d{1,2}))?/);
+  if (!match) return null;
+  const currency = match[1];
+  const whole = match[2] ?? "";
+  const separator = match[3];
+  const fraction = match[4] ?? "";
+  const digits = separator === "," || (separator === "." && !whole.includes("."))
+    ? Number(`${whole.replace(/\./g, "")}.${fraction || "0"}`)
+    : Number(whole.replace(/\./g, ""));
+  if (!Number.isFinite(digits)) return null;
+  const formatted = digits.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${currency} ${formatted}`;
+}
+
 export function formatScanStamp(input: string | Date) {
   const stamp = saoPauloStamp(input);
   return `varredura em ${stamp.day}/${stamp.month} - ${stamp.hour}h`;
