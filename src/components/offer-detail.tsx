@@ -5,7 +5,7 @@ import { AdsReadout } from "@/components/ads-readout";
 import { OfferActions } from "@/components/offer-actions";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
 import type { OfferAction } from "@/lib/actions/types";
-import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatUpdated, heatLabel, heatPrefix, stripTracking } from "@/lib/offers/format";
+import { formatBumpPrice, formatCalendarDate, formatScanStamp, formatUpdated, stripTracking } from "@/lib/offers/format";
 import { SCAN_LANGUAGES } from "@/lib/offers/schema";
 import type { OfferDetail } from "@/lib/offers/types";
 
@@ -24,8 +24,6 @@ export function OfferDetailView({
 }) {
   const latest = offer.snapshots[0] ?? null;
   const previous = offer.snapshots[1] ?? null;
-  const prefix = heatPrefix(latest?.total_active_ads ?? null);
-  const label = heatLabel(latest?.total_active_ads ?? null);
 
   return (
     <article className="grid gap-6">
@@ -49,11 +47,7 @@ export function OfferDetailView({
             <span className="text-xs text-muted">Ativa</span>
           )}
         </div>
-        <h1 className="font-display text-3xl leading-tight text-gold sm:text-4xl">
-          {label ? <span className="sr-only">{label} </span> : null}
-          {prefix ? <span aria-hidden="true">{prefix} </span> : null}
-          {offer.title}
-        </h1>
+        <h1 className="font-display text-3xl leading-tight text-gold sm:text-4xl">{offer.title}</h1>
         <LibraryLinks offer={offer} />
         <OfferActions
           slug={offer.slug}
@@ -147,25 +141,6 @@ export function OfferDetailView({
       </div>
 
       <LanguageScanSection offer={offer} />
-
-      <section className="grid gap-3">
-        <h2 className="font-subtitle text-2xl text-gold">Bibliotecas</h2>
-        {offer.libraries.length === 0 ? (
-          <p className="text-sm">Nenhuma biblioteca vinculada.</p>
-        ) : (
-          <ul className="grid gap-3">
-            {offer.libraries
-              .slice()
-              .sort((a, b) => b.active_ads - a.active_ads)
-              .map((library) => (
-                <li key={library.library_url} className="grid gap-0.5 rounded-md border border-line bg-panel px-3 py-2">
-                  <span className="font-semibold">{library.page_name}</span>
-                  <span className="tabular-nums">{library.active_ads} anúncios ativos</span>
-                </li>
-              ))}
-          </ul>
-        )}
-      </section>
 
       <section className="grid gap-3">
         <h2 className="font-subtitle text-2xl text-gold">Histórico de anúncios ativos</h2>
@@ -265,30 +240,33 @@ function LanguageScanSection({ offer }: { offer: OfferDetail }) {
 }
 
 function LibraryLinks({ offer }: { offer: OfferDetail }) {
-  const meta = offer.libraries.map((library) => stripTracking(library.library_url));
+  const libraries = offer.libraries.slice().sort((a, b) => b.active_ads - a.active_ads);
   const google = offer.google_library_url ? stripTracking(offer.google_library_url) : null;
-  if (meta.length === 0 && !google) return null;
+  if (libraries.length === 0 && !google) return null;
   return (
-    <div className="grid gap-3">
-      {meta.length > 0 ? (
-        <div className="grid gap-1">
-          <p className="font-subtitle text-xs uppercase tracking-wide text-gold">Biblioteca da Meta</p>
-          <ul className="grid gap-1">
-            {meta.map((href, index) => (
-              <li key={`${href}-${index}`}>
-                <ExternalLink href={href} />
-              </li>
-            ))}
-          </ul>
-        </div>
+    <section className="grid gap-2">
+      <h2 className="font-subtitle text-xs uppercase tracking-wide text-gold">Bibliotecas</h2>
+      {libraries.length > 0 ? (
+        <ul className="grid gap-2">
+          {libraries.map((library, index) => (
+            <li
+              key={`${library.library_url}-${index}`}
+              className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-3"
+            >
+              <span className="font-semibold">{library.page_name}</span>
+              <ExternalLink href={library.library_url} />
+              <span className="tabular-nums">{library.active_ads} anúncios ativos</span>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {google ? (
-        <div className="grid gap-1">
-          <p className="font-subtitle text-xs uppercase tracking-wide text-gold">Biblioteca do Google</p>
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-3">
+          <span className="font-semibold">Biblioteca do Google</span>
           <ExternalLink href={google} />
         </div>
       ) : null}
-    </div>
+    </section>
   );
 }
 

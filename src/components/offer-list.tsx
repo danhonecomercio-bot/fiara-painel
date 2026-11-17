@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdsReadout } from "@/components/ads-readout";
 import { OportunidadeMark, OpportunityBadge } from "@/components/opportunity-badge";
-import { formatUpdated, heatLabel, heatPrefix } from "@/lib/offers/format";
+import { formatUpdated } from "@/lib/offers/format";
 import type { OfferCard } from "@/lib/offers/types";
 
 export function OfferList({ offers }: { offers: OfferCard[] }) {
@@ -92,14 +92,8 @@ function OfferCardView({ offer }: { offer: OfferCard }) {
 }
 
 function OfferTitle({ offer, linked = true }: { offer: OfferCard; linked?: boolean }) {
-  const prefix = heatPrefix(offer.total_active_ads);
-  const label = heatLabel(offer.total_active_ads);
   const title = (
-    <span className="font-display text-lg leading-6 text-gold">
-      {label ? <span className="sr-only">{label} </span> : null}
-      {prefix ? <span aria-hidden="true">{prefix} </span> : null}
-      {offer.title}
-    </span>
+    <span className="font-display text-lg leading-6 text-gold">{offer.title}</span>
   );
 
   return (
