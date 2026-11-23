@@ -4,7 +4,7 @@ export function shouldAutoVarredura(
   score: number | null | undefined,
   existing: Pick<OfferAction, "action" | "status">[],
 ) {
-  if (score == null || score < 4) return false;
+  if (score == null || score < 3.5) return false;
   return !existing.some((row) => row.action === "varredura_idiomas");
 }
 

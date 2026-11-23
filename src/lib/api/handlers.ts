@@ -376,7 +376,7 @@ async function fireAuto(
 }
 
 async function maybeVarredura(offer: OfferDetail, score: number | null | undefined) {
-  if (score == null || score < 4) return;
+  if (score == null || score < 3.5) return;
   const config = webhookConfig("varredura_idiomas");
   if (!config) {
     console.info(autoSkipMessage("varredura_idiomas", offer.slug));

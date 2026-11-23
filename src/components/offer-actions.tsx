@@ -75,7 +75,7 @@ export function OfferActions({
           label="Varredura em idiomas"
           action="varredura_idiomas"
           ready={varreduraReady}
-          disabledHint="não configurado"
+          disabledHint="webhook do Minerador não configurado"
           row={actions.find((item) => item.action === "varredura_idiomas") ?? null}
           busy={busy === "varredura_idiomas"}
           onRun={run}

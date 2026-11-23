@@ -149,10 +149,10 @@ describe("webhook de ações", () => {
   });
 
   it("não repete a varredura automática se já existe pedido aberto ou concluído", () => {
-    assert.equal(shouldAutoVarredura(4, []), true);
-    assert.equal(shouldAutoVarredura(3.5, []), false);
+    assert.equal(shouldAutoVarredura(3.5, []), true);
+    assert.equal(shouldAutoVarredura(3, []), false);
     assert.equal(
-      shouldAutoVarredura(4, [{ action: "varredura_idiomas", status: "failed" }]),
+      shouldAutoVarredura(3.5, [{ action: "varredura_idiomas", status: "failed" }]),
       false,
     );
     assert.equal(
