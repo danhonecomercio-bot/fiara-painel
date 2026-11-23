@@ -297,10 +297,10 @@ Os botões **Baixar top ads** e **Modelar** não chamam o webhook pelo navegador
 | Botão ou automático | `action` | Variáveis |
 | --- | --- | --- |
 | Baixar top ads e dissecar (oferta nova) | `baixar_top_ads`, `dissecar` | `DISSECADOR_WEBHOOK_URL` e `DISSECADOR_WEBHOOK_KEY`. Se esse par faltar, vale `TOPADS_WEBHOOK_URL` e `TOPADS_WEBHOOK_KEY`. |
-| Varredura em idiomas | `varredura_idiomas` | `MINERADOR_WEBHOOK_URL` e `MINERADOR_WEBHOOK_KEY` |
+| Varredura em idiomas | `varredura_idiomas` | `MINERADOR_WEBHOOK_URL` e `MINERADOR_WEBHOOK_KEY`. Se esse par faltar, vale `DISSECADOR_WEBHOOK_URL` e `DISSECADOR_WEBHOOK_KEY`. |
 | Modelar | `modelar` | `MODELADOR_WEBHOOK_URL` e `MODELADOR_WEBHOOK_KEY` |
 
-Sem o par de variáveis, o botão fica desabilitado: “não configurado” em top ads e na varredura, “em breve” em modelar. O botão **Varredura em idiomas** aparece em toda oferta, com ou sem nota. O disparo automático (dissecar na oferta nova, varredura quando a nota chega a 3,5 ou mais) só registra no log e não chama o webhook.
+Sem o par de variáveis, o botão fica desabilitado: “não configurado” em top ads e na varredura, “em breve” em modelar. Na varredura, o par do Dissecador conta como configurado quando o do Minerador não existe. O botão **Varredura em idiomas** aparece em toda oferta, com ou sem nota. O disparo automático (dissecar na oferta nova, varredura quando a nota chega a 3,5 ou mais) só registra no log e não chama o webhook se nenhum par aplicável estiver configurado.
 
 O painel manda:
 
@@ -328,7 +328,7 @@ X-Automation-Key: <WEBHOOK_KEY>
 
 A linha em `offer_actions` é criada antes do POST. `action` é `baixar_top_ads`, `modelar`, `dissecar` ou `varredura_idiomas`. `action_id` é o `id` dessa linha e é o mesmo valor do `PATCH /api/offer-actions/:id`. `funnel_slug` é o `slug` da oferta em minúsculas. `meta_library_urls` já vem sem rastreio. `requested_by` é o e-mail de quem clicou, ou `sistema` no disparo automático. O corpo de **Modelar**, **dissecar** e **varredura** é o mesmo, mudando só `action`.
 
-`dissecar` dispara sozinho no primeiro `POST` de um slug novo. Não dispara de novo nos snapshots seguintes. `varredura_idiomas` dispara sozinha quando um `PATCH` grava `opportunity_score >= 3.5` (nota direta ou soma do `score_breakdown`) e a oferta ainda não tem nenhum pedido `varredura_idiomas`. O botão manual não depende da nota: qualquer membro logado pode pedi-lo. Sem `MINERADOR_WEBHOOK_URL` e `MINERADOR_WEBHOOK_KEY`, o botão fica desabilitado com “não configurado” e o automático não chama o webhook.
+`dissecar` dispara sozinho no primeiro `POST` de um slug novo. Não dispara de novo nos snapshots seguintes. `varredura_idiomas` dispara sozinha quando um `PATCH` grava `opportunity_score >= 3.5` (nota direta ou soma do `score_breakdown`) e a oferta ainda não tem nenhum pedido `varredura_idiomas`. O botão manual não depende da nota: qualquer membro logado pode pedi-lo. Sem `MINERADOR_WEBHOOK_URL` e `MINERADOR_WEBHOOK_KEY`, a varredura usa o webhook do Dissecador, com o mesmo corpo e `action: "varredura_idiomas"`. Só fica desabilitada com “não configurado”, e o automático não chama o webhook, se nenhum dos dois pares estiver configurado.
 
 ### score_breakdown
 

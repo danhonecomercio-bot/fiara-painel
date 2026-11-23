@@ -18,7 +18,12 @@ export function webhookConfig(action: OfferActionName): WebhookConfig | null {
       pair("TOPADS_WEBHOOK_URL", "TOPADS_WEBHOOK_KEY")
     );
   }
-  if (action === "varredura_idiomas") return pair("MINERADOR_WEBHOOK_URL", "MINERADOR_WEBHOOK_KEY");
+  if (action === "varredura_idiomas") {
+    return (
+      pair("MINERADOR_WEBHOOK_URL", "MINERADOR_WEBHOOK_KEY") ??
+      pair("DISSECADOR_WEBHOOK_URL", "DISSECADOR_WEBHOOK_KEY")
+    );
+  }
   return pair("MODELADOR_WEBHOOK_URL", "MODELADOR_WEBHOOK_KEY");
 }
 

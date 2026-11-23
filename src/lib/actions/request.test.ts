@@ -136,10 +136,17 @@ describe("webhook de ações", () => {
     assert.equal(webhookConfig("baixar_top_ads")?.url, "https://dissecar.exemplo/hook");
     delete process.env.MINERADOR_WEBHOOK_URL;
     delete process.env.MINERADOR_WEBHOOK_KEY;
-    assert.equal(webhookConfig("varredura_idiomas"), null);
+    assert.equal(webhookConfig("varredura_idiomas")?.url, "https://dissecar.exemplo/hook");
+    assert.equal(webhookConfig("varredura_idiomas")?.key, "dis");
     process.env.MINERADOR_WEBHOOK_URL = "https://minerador.exemplo/hook";
     process.env.MINERADOR_WEBHOOK_KEY = "mina";
+    assert.equal(webhookConfig("varredura_idiomas")?.url, "https://minerador.exemplo/hook");
     assert.equal(webhookConfig("varredura_idiomas")?.key, "mina");
+    delete process.env.MINERADOR_WEBHOOK_URL;
+    delete process.env.MINERADOR_WEBHOOK_KEY;
+    delete process.env.DISSECADOR_WEBHOOK_URL;
+    delete process.env.DISSECADOR_WEBHOOK_KEY;
+    assert.equal(webhookConfig("varredura_idiomas"), null);
     restore("DISSECADOR_WEBHOOK_URL", saved.dissectorUrl);
     restore("DISSECADOR_WEBHOOK_KEY", saved.dissectorKey);
     restore("TOPADS_WEBHOOK_URL", saved.topadsUrl);
